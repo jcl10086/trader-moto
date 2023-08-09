@@ -369,7 +369,8 @@ class EastMoneyTrader(webtrader.WebTrader):
         }).json()
 
         if response['Status'] != 0:
-            raise exceptions.TradeError('下单失败, %s' % json.dumps(response))
+            # raise exceptions.TradeError('下单失败, %s' % json.dumps(response))
+            raise exceptions.TradeError('下单失败, %s' % response['Message'])
 
         logger.info('下单成功')
 

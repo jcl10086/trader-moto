@@ -162,10 +162,8 @@ def online_one_price(my_position):
             time.sleep(3)
 
 
-def test():
-    # user.sell('123177', price=100, amount=10)
-    user.current_deal
-    # user.today_entrusts
+# def test():
+#     user.current_deal
 
 
 if __name__ == '__main__':

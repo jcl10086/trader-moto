@@ -1,3 +1,4 @@
+import datetime
 import re
 import time
 
@@ -36,18 +37,17 @@ def get_online_all_price():
                 stock_list.append((1, str(code[1].split('.')[0])))
             else:
                 continue
-
+        stock_list = [(0, '123205')]
         batch_size = 80
         for i in range(0, len(stock_list), batch_size):
             my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
             for my_dict in my_dicts:
-                for key, value in my_dict.items():
-                    if key == "code":
-                        print(str(value))
-                    if key == "reversed_bytes9":
-                        print("===" + str(value))
-
-        time.sleep(4)
+                data_dict = dict(my_dict)
+                # test_dict = {'code': data_dict['code'], 'reversed_bytes9': data_dict['reversed_bytes9'], 'cur_vol': data_dict['cur_vol'], 'ask_vol1': data_dict['ask_vol1'], 'bid_vol1': data_dict['bid_vol1']}
+                reversed_bytes = data_dict['reversed_bytes0']
+                # servertime_obj = datetime.datetime.strptime(servertime, '%H%M:%S.%f')
+                print(str(reversed_bytes))
+        time.sleep(3)
 
 
 # 获取可以资金
@@ -133,69 +133,70 @@ def online_one_price(my_position):
         flag = True
         my_dicts = api.get_security_quotes([(market_code, stock_code)])
         for my_dict in my_dicts:
-            for key, value in my_dict.items():
-                if key == "price":
-                    # 现价
-                    price = round(float(value) / 100, 3)
-                    diff_yk = round((price - cost_price) / cost_price * 100, 2)
-                    print('现价：' + str(price) + ', 成本价：' + str(cost_price), ', 盈亏：' + str(diff_yk))
+            data_dict = dict(my_dict)
+            price = data_dict['price']
+            # 现价
+            price = round(float(price) / 100, 3)
+            diff_yk = round((price - cost_price) / cost_price * 100, 2)
+            print('现价：' + str(price) + ', 成本价：' + str(cost_price), ', 盈亏：' + str(diff_yk))
 
-                    # # 设置保本价格
-                    if price > cost_price * 1.008 and bb_price == 0.0:
-                        bb_price = 1.002 * price
+            # # 设置保本价格
+            if price > cost_price * 1.006 and bb_price == 0.0:
+                bb_price = 1.002 * cost_price
 
-                    # 设置最大价格
-                    if price > cost_price * 1.015 and max_price == 0.0:
-                        max_price = price
-                        print('触发最大价===========================================')
+            # 设置最大价格
+            if price > cost_price * 1.015 and max_price == 0.0:
+                max_price = price
+                print('触发最大价===========================================')
 
-                    if price > max_price != 0.0:
-                        max_price = price
+            if price > max_price != 0.0:
+                max_price = price
 
-                    # 最大价格以激活 止盈 1%
-                    if max_price != 0.0:
-                        if price <= cost_price * 1.01:
-                            gd_price = round(cost_price * 0.95, 2)
-                            # 挂 -5% 清仓
-                            user.sell(stock_code, price=gd_price, amount=enable_amount)
-                            print('止盈')
-                            flag = False
-                            break
-                        # 差价涨幅
-                        diff_zf = round((max_price - price) / price * 100, 2)
-                        if diff_zf > 1.5:
-                            gd_price = round(cost_price * 0.95, 2)
-                            # 挂 -5% 清仓
-                            user.sell(stock_code, price=gd_price, amount=enable_amount)
-                            print('止盈')
-                            flag = False
-                            break
-
-                    # 保本0.02
-                    if price <= bb_price and max_price == 0.0:
-                        gd_price = round(cost_price * 0.95, 2)
-                        # 挂 -5% 清仓
-                        user.sell(stock_code, price=gd_price, amount=enable_amount)
-                        print('保本')
-                        flag = False
-                        break
-
-                    # 止损价 -1%
-                    if price <= cost_price * 0.99:
-                        gd_price = round(cost_price * 0.95, 2)
-                        # 挂 -5% 清仓
-                        user.sell(stock_code, price=gd_price, amount=enable_amount)
-                        print('止损')
-                        flag = False
-                        break
+            # 最大价格以激活 止盈 1%
+            if max_price != 0.0:
+                if price <= cost_price * 1.01:
+                    gd_price = round(cost_price * 0.95, 2)
+                    # 挂 -5% 清仓
+                    user.sell(stock_code, price=gd_price, amount=enable_amount)
+                    print('止盈')
+                    flag = False
                     break
+                # 差价涨幅
+                diff_zf = round((max_price - price) / price * 100, 2)
+                if diff_zf > 1.5:
+                    gd_price = round(cost_price * 0.95, 2)
+                    # 挂 -5% 清仓
+                    user.sell(stock_code, price=gd_price, amount=enable_amount)
+                    print('止盈')
+                    flag = False
+                    break
+
+            # 保本0.002
+            # if price <= bb_price != 0.0:
+            #     gd_price = round(cost_price * 0.95, 2)
+            #     # 挂 -5% 清仓
+            #     user.sell(stock_code, price=gd_price, amount=enable_amount)
+            #     print('保本')
+            #     flag = False
+            #     break
+
+            # 止损价 -1%
+            if price <= cost_price * 0.99:
+                gd_price = round(cost_price * 0.95, 2)
+                # 挂 -5% 清仓
+                user.sell(stock_code, price=gd_price, amount=enable_amount)
+                print('止损')
+                flag = False
+                break
+
         if flag is False:
             break
         time.sleep(3)
 
 
 # def test():
-#     user.current_deal
+#     # user.current_deal
+#     data = api.get_transaction_data(0, '123205', start=0, count=10)  # 获取最新的10笔交易数据
 
 
 if __name__ == '__main__':
@@ -203,7 +204,7 @@ if __name__ == '__main__':
     # print(str(get_balance()))
     # position_info()
     # online_one_price('')
-    # sell_info()
+    sell_info()
     # test()
     # current_deal_info()
-    get_online_all_price()
+    # get_online_all_price()

@@ -2,26 +2,23 @@
 import time
 
 import pandas as pd
-import pymysql
+import redis
 from pytdx.hq import TdxHq_API
 
 api = TdxHq_API()
 # 连接到行情服务器
 api.connect('119.147.212.81', 7709)
 
-conn = pymysql.connect(host='192.168.1.4', user='root', password='123456',
-                      db='moto')
+# 连接到Redis
+r = redis.Redis(host='192.168.1.4', port=6379, db=0)
+# 创建管道对象
+pipe = r.pipeline()
 
 
 def get_online_all_price():
 
     dataframe = pd.read_excel('可转债.xlsx')
     codes = dataframe['转债代码']
-
-    # 创建一个游标对象
-    cursor = conn.cursor()
-    insert_query = "INSERT INTO order_data (reversed_bytes0, code, price, cur_vol, reversed_bytes9, servertime) VALUES (" \
-                   "%s, %s, %s, %s, %s, %s) "
 
     while True:
         stock_list = []
@@ -38,21 +35,16 @@ def get_online_all_price():
         batch_size = 80
         for i in range(0, len(stock_list), batch_size):
             my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
-            # my_dict_all.extend(my_dicts)
             for my_dict in my_dicts:
-                # data_dict = dict(my_dict)
                 data_dict = {'reversed_bytes0': my_dict['reversed_bytes0'], 'code': my_dict['code'], 'price': my_dict['price'],
-                             'cur_vol': my_dict['cur_vol'], 'reversed_bytes9': my_dict['reversed_bytes9'], 'servertime': my_dict['servertime']}
+                             'cur_vol': my_dict['cur_vol'], 'reversed_bytes9': my_dict['reversed_bytes9']}
                 my_dict_all.append(data_dict)
-        my_df = pd.DataFrame(my_dict_all)
-        # 构造数据值的元组列表
-        values = [tuple(row) for row in my_df.values]
-
-        # 执行批量插入操作
-        cursor.executemany(insert_query, values)
-        conn.commit()
+        for item in my_dict_all:
+            pipe.hmset(f'order:{item["code"]}:{item["reversed_bytes0"]}', {key: value for key, value in item.items()})
+            # 设置键的过期时间为 60 秒
+            r.expire(f'order:{item["code"]}:{item["reversed_bytes0"]}', 120)
+        pipe.execute()
         print('插入数据')
-        # my_df = my_df.sort_values('reversed_bytes9', ascending=False).head(3)
         time.sleep(3)
 
 

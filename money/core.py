@@ -190,16 +190,16 @@ def online_one_price(my_position):
                     break
 
             # 保本0.002
-            # if price <= bb_price != 0.0:
-            #     gd_price = round(cost_price * 0.95, 2)
-            #     # 挂 -5% 清仓
-            #     user.sell(stock_code, price=gd_price, amount=enable_amount)
-            #     print('保本')
-            #     flag = False
-            #     break
+            if price <= bb_price != 0.0:
+                gd_price = round(cost_price * 0.95, 2)
+                # 挂 -5% 清仓
+                user.sell(stock_code, price=gd_price, amount=enable_amount)
+                print('保本')
+                flag = False
+                break
 
-            # 止损价 -1%
-            if price <= cost_price * 0.99:
+            # 止损价 -0.8%
+            if price <= cost_price * 0.992:
                 gd_price = round(cost_price * 0.95, 2)
                 # 挂 -5% 清仓
                 user.sell(stock_code, price=gd_price, amount=enable_amount)

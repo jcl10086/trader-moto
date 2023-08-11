@@ -34,7 +34,7 @@ def get_online_all_price():
         my_dict_all = []
         for stock in stock_list:
             print(f'{stock[1]}')
-            my_dicts = api.get_history_transaction_data(stock[0], stock[1], 0, 3000, 20230811)
+            my_dicts = api.get_history_transaction_data(stock[0], stock[1], 3000, 3000, 20230811)
             i = 0
             for my_dict in my_dicts:
                 # 填充4位字符串

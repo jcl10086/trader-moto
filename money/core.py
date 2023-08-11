@@ -109,6 +109,7 @@ def get_stock_top():
         # 遍历指定的列
         for code in my_df['code'].iteritems():
             flag = check_data(code[1])
+            print(f'{code[1]}==={flag}')
             if flag:
                 # 买
                 buy_info()

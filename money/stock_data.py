@@ -36,7 +36,8 @@ def get_online_all_price():
         for i in range(0, len(stock_list), batch_size):
             my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
             for my_dict in my_dicts:
-                data_dict = {'reversed_bytes0': my_dict['reversed_bytes0'], 'code': my_dict['code'], 'price': my_dict['price'],
+                data_dict = {'reversed_bytes0': my_dict['reversed_bytes0'], 'code': my_dict['code'],
+                             'price': round(float(my_dict['price']) / 100, 3),
                              'cur_vol': my_dict['cur_vol'], 'reversed_bytes9': my_dict['reversed_bytes9']}
                 my_dict_all.append(data_dict)
         for item in my_dict_all:

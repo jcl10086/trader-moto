@@ -2,8 +2,10 @@ import datetime
 import re
 import time
 
+import numpy as np
 import pandas as pd
 import pymysql
+import redis
 
 from pytdx.hq import TdxHq_API
 
@@ -18,54 +20,8 @@ api = TdxHq_API()
 # 连接到行情服务器
 api.connect('119.147.212.81', 7709)
 
-conn = pymysql.connect(host='192.168.1.4', user='root', password='123456',
-                      db='moto')
-# def get_user():
-#     global user
-#     user = easytrader.use('eastmoney')
-#     user.prepare('account.json')
-
-
-# def get_online_all_price():
-#
-#     dataframe = pd.read_excel('可转债.xlsx')
-#     codes = dataframe['转债代码']
-#
-#     # 创建一个游标对象
-#     cursor = conn.cursor()
-#     insert_query = "INSERT INTO order_data (reversed_bytes0, code, price, cur_vol, reversed_bytes9, servertime) VALUES (" \
-#                    "%s, %s, %s, %s, %s, %s) "
-#
-#     while True:
-#         stock_list = []
-#         for code in codes.items():
-#             # xx.SZ  xx.SH
-#             if code[1].split('.')[1] == 'SZ':
-#                 stock_list.append((0, str(code[1].split('.')[0])))
-#             elif code[1].split('.')[1] == 'SH':
-#                 stock_list.append((1, str(code[1].split('.')[0])))
-#             else:
-#                 continue
-#         # stock_list = [(0, '123205')]
-#         my_dict_all = []
-#         batch_size = 80
-#         for i in range(0, len(stock_list), batch_size):
-#             my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
-#             # my_dict_all.extend(my_dicts)
-#             for my_dict in my_dicts:
-#                 # data_dict = dict(my_dict)
-#                 data_dict = {'reversed_bytes0': my_dict['reversed_bytes0'], 'code': my_dict['code'], 'price': my_dict['price'],
-#                              'cur_vol': my_dict['cur_vol'], 'reversed_bytes9': my_dict['reversed_bytes9'], 'servertime': my_dict['servertime']}
-#                 my_dict_all.append(data_dict)
-#         my_df = pd.DataFrame(my_dict_all)
-#         # 构造数据值的元组列表
-#         values = [tuple(row) for row in my_df.values]
-#
-#         # 执行批量插入操作
-#         cursor.executemany(insert_query, values)
-#         conn.commit()
-#         # my_df = my_df.sort_values('reversed_bytes9', ascending=False).head(3)
-#         time.sleep(3)
+# 连接到Redis
+r = redis.Redis(host='192.168.1.4', port=6379, db=0)
 
 
 # 获取可以资金
@@ -122,6 +78,94 @@ def current_deal_info():
 #         return my_position
 #     else:
 #         return None
+
+
+def get_stock_top():
+    dataframe = pd.read_excel('可转债.xlsx')
+    codes = dataframe['转债代码']
+    while True:
+        stock_list = []
+        for code in codes.items():
+            # xx.SZ  xx.SH
+            if code[1].split('.')[1] == 'SZ':
+                stock_list.append((0, str(code[1].split('.')[0])))
+            elif code[1].split('.')[1] == 'SH':
+                stock_list.append((1, str(code[1].split('.')[0])))
+            else:
+                continue
+        # stock_list = [(0, '123205')]
+        my_dict_all = []
+        batch_size = 80
+        for i in range(0, len(stock_list), batch_size):
+            my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
+            for my_dict in my_dicts:
+                data_dict = {'reversed_bytes9': my_dict['reversed_bytes9'], 'code': my_dict['code']}
+                my_dict_all.append(data_dict)
+        my_df = pd.DataFrame(my_dict_all)
+        # 过滤条件：reversed_bytes0
+        my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) & (my_df['reversed_bytes9'] <= 2)]
+        # 按照Score列进行降序排序，并获取Top 3行
+        my_df = my_df.nlargest(3, 'reversed_bytes9')
+        # 遍历指定的列
+        for code in my_df['code'].iteritems():
+            flag = check_data(code[1])
+            if flag:
+                # 买
+                buy_info()
+                time.sleep(1)
+                # 卖
+                sell_info()
+                break
+        time.sleep(3)
+
+
+# 校验数据 取最近5个值 判断是否程上升趋势
+def check_data(code):
+    # 模糊查询键值对
+    keys = r.scan_iter(match=f'order:{code}*')
+
+    # 获取匹配的键值对
+    result = []
+    for key in keys:
+        data = r.hgetall(key.decode())
+        # 将字节字符串转换为Unicode字符串
+        data = {key.decode(): value.decode() for key, value in data.items()}
+        result.append(data)
+    my_df = pd.DataFrame(result)
+    # 按照reversed_bytes0列进行升序排序
+    my_df = my_df.sort_values('reversed_bytes0')
+    # 获取最近的5个值
+    my_df = my_df.tail(5)
+
+    # 将price列转换为数组  价格
+    price_array = my_df['price'].values.astype(float)
+    # 判定数组增长趋势
+    threshold = 0.6
+    flag1 = is_data_increasing(price_array, threshold)
+
+    # cur_vol列转换为数组  当前成交量
+    vol_array = my_df['cur_vol'].values.astype(int)
+    flag2 = False
+    if round(np.mean(vol_array)) > 300:
+        flag2 = True
+
+    flag = False
+    if flag1 & flag2:
+        flag = True
+    return flag
+
+
+# 判断数据大体上涨
+def is_data_increasing(data, threshold):
+    count = 0
+    for i in range(1, len(data)):
+        if data[i] > data[i-1]:
+            count += 1
+    ratio = count / len(data)
+    if ratio >= threshold:
+        return True
+    else:
+        return False
 
 
 # 挂单卖出
@@ -218,11 +262,6 @@ def online_one_price(my_position):
 
 
 if __name__ == '__main__':
-    # get_user()
-    # print(str(get_balance()))
-    # position_info()
-    # online_one_price('')
-    sell_info()
-    # test()
-    # current_deal_info()
-    # get_online_all_price()
+    get_stock_top()
+    # sell_info()
+

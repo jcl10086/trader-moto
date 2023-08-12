@@ -30,7 +30,7 @@ def get_online_all_price():
                 stock_list.append((1, str(code[1].split('.')[0])))
             else:
                 continue
-        stock_list = [(0, '123205')]
+        stock_list = [(1, '113601')]
         my_dict_all = []
         for stock in stock_list:
             print(f'{stock[1]}')
@@ -41,7 +41,7 @@ def get_online_all_price():
                 reversed_bytes0 = str(i).zfill(4)
                 data_dict = {'reversed_bytes0': reversed_bytes0, 'code': stock[1],
                              'price': round(float(my_dict['price']) / 10, 3),
-                             'cur_vol': my_dict['vol'], 'reversed_bytes9': ''}
+                             'cur_vol': my_dict['vol'], 'reversed_bytes9': '1.5', 'time': my_dict['time']}
                 i = i + 1
                 my_dict_all.append(data_dict)
         for item in my_dict_all:

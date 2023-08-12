@@ -1,4 +1,5 @@
 import datetime
+import math
 import re
 import time
 
@@ -38,8 +39,15 @@ def get_balance():
 
 
 # 挂单买入
-def buy_info():
-    print()
+def buy_info(code, current_price, current_balance):
+    # 挂单股价
+    gd_price = current_price * 1.05
+    gd_price = round(gd_price, 2)
+    # 挂单数量
+    gd_num = math.floor(current_balance / gd_price / 10) * 10
+    # 买入
+    user.buy(code, price=gd_price, amount=gd_num)
+    return gd_num
 
 
 # 获取当日成交
@@ -99,7 +107,7 @@ def get_stock_top():
         for i in range(0, len(stock_list), batch_size):
             my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
             for my_dict in my_dicts:
-                data_dict = {'reversed_bytes9': my_dict['reversed_bytes9'], 'code': my_dict['code']}
+                data_dict = {'reversed_bytes9': my_dict['reversed_bytes9'], 'code': my_dict['code'], 'price': my_dict['price']}
                 my_dict_all.append(data_dict)
         my_df = pd.DataFrame(my_dict_all)
         # 过滤条件：reversed_bytes0
@@ -107,21 +115,23 @@ def get_stock_top():
         # 按照Score列进行降序排序，并获取Top 3行
         my_df = my_df.nlargest(3, 'reversed_bytes9')
         # 遍历指定的列
-        for code in my_df['code'].iteritems():
-            flag = check_data(code[1])
-            print(f'{code[1]}==={flag}')
+        for index, row in my_df.iterrows():
+            flag = check_data(row['code'])
             if flag:
-                # 买
-                buy_info()
+                current_price = round(row['price'] / 100, 2)
+                current_balance = get_balance()
+                # 买入数量
+                gd_num = buy_info(row['code'], current_price, current_balance)
                 time.sleep(1)
                 # 卖
-                sell_info()
+                sell_info(gd_num)
                 break
         time.sleep(3)
 
 
 # 校验数据 取最近5个值 判断是否程上升趋势
 def check_data(code):
+    flag = False
     # 模糊查询键值对
     keys = r.scan_iter(match=f'order:{code}*')
 
@@ -132,6 +142,8 @@ def check_data(code):
         # 将字节字符串转换为Unicode字符串
         data = {key.decode(): value.decode() for key, value in data.items()}
         result.append(data)
+    if len(result) == 0:
+        return flag
     my_df = pd.DataFrame(result)
     # 按照reversed_bytes0列进行升序排序
     my_df = my_df.sort_values('reversed_bytes0')
@@ -150,7 +162,6 @@ def check_data(code):
     if round(np.mean(vol_array)) > 300:
         flag2 = True
 
-    flag = False
     if flag1 & flag2:
         flag = True
     return flag
@@ -170,9 +181,13 @@ def is_data_increasing(data, threshold):
 
 
 # 挂单卖出
-def sell_info():
+def sell_info(gd_num):
     my_position = current_deal_info()
+
     if my_position is not None:
+        # 判断是否有挂单
+        if gd_num > 0:
+            my_position['enable_amount'] = gd_num
         online_one_price(my_position)
 
 
@@ -264,5 +279,5 @@ def online_one_price(my_position):
 
 if __name__ == '__main__':
     get_stock_top()
-    # sell_info()
+    # sell_info(0)
 

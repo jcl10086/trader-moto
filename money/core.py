@@ -7,8 +7,10 @@ import numpy as np
 import pandas as pd
 import pymysql
 import redis
+from mootdx.quotes import Quotes
 
 from pytdx.hq import TdxHq_API
+from pytdx.params import TDXParams
 
 import easytrader
 
@@ -22,7 +24,8 @@ api = TdxHq_API()
 api.connect('119.147.212.81', 7709)
 
 # 连接到Redis
-r = redis.Redis(host='192.168.1.4', port=6379, db=0)
+# r = redis.Redis(host='192.168.1.4', port=6379, db=0)
+tdx_client = Quotes.factory(market='std')
 
 
 # 获取可以资金
@@ -41,7 +44,7 @@ def get_balance():
 # 挂单买入
 def buy_info(code, current_price, current_balance):
     # 挂单股价
-    gd_price = current_price * 1.05
+    gd_price = current_price * 1.03
     gd_price = round(gd_price, 2)
     # 挂单数量
     gd_num = math.floor(current_balance / gd_price / 10) * 10
@@ -91,17 +94,18 @@ def current_deal_info():
 def get_stock_top():
     dataframe = pd.read_excel('可转债.xlsx')
     codes = dataframe['转债代码']
+
+    stock_list = []
+    for code in codes.items():
+        # xx.SZ  xx.SH
+        if code[1].split('.')[1] == 'SZ':
+            stock_list.append((0, str(code[1].split('.')[0])))
+        elif code[1].split('.')[1] == 'SH':
+            stock_list.append((1, str(code[1].split('.')[0])))
+        else:
+            continue
+    # stock_list = [(0, '123205')]
     while True:
-        stock_list = []
-        for code in codes.items():
-            # xx.SZ  xx.SH
-            if code[1].split('.')[1] == 'SZ':
-                stock_list.append((0, str(code[1].split('.')[0])))
-            elif code[1].split('.')[1] == 'SH':
-                stock_list.append((1, str(code[1].split('.')[0])))
-            else:
-                continue
-        # stock_list = [(0, '123205')]
         my_dict_all = []
         batch_size = 80
         for i in range(0, len(stock_list), batch_size):
@@ -116,50 +120,74 @@ def get_stock_top():
         my_df = my_df.nlargest(3, 'reversed_bytes9')
         # 遍历指定的列
         for index, row in my_df.iterrows():
-            flag = check_data(row['code'])
+            flag = check_data1(row['code'])
             if flag:
                 current_price = round(row['price'] / 100, 2)
                 current_balance = get_balance()
                 # 买入数量
                 gd_num = buy_info(row['code'], current_price, current_balance)
+                print(f'{row["code"]}' + '下单')
                 time.sleep(1)
                 # 卖
                 sell_info(gd_num)
                 break
+            else:
+                print(f'{row["code"]}' + '检测失败')
         time.sleep(3)
 
 
 # 校验数据 取最近5个值 判断是否程上升趋势
-def check_data(code):
+# def check_data(code):
+#     flag = False
+#     # 模糊查询键值对
+#     keys = r.scan_iter(match=f'order:{code}*')
+#
+#     # 获取匹配的键值对
+#     result = []
+#     for key in keys:
+#         data = r.hgetall(key.decode())
+#         # 将字节字符串转换为Unicode字符串
+#         data = {key.decode(): value.decode() for key, value in data.items()}
+#         result.append(data)
+#     if len(result) == 0:
+#         return flag
+#     my_df = pd.DataFrame(result)
+#     # 按照reversed_bytes0列进行升序排序
+#     my_df = my_df.sort_values('reversed_bytes0')
+#     # 获取最近的5个值
+#     my_df = my_df.tail(5)
+#
+#     # 将price列转换为数组  价格
+#     price_array = my_df['price'].values.astype(float)
+#     # 判定数组增长趋势
+#     threshold = 0.6
+#     flag1 = is_data_increasing(price_array, threshold)
+#
+#     # cur_vol列转换为数组  当前成交量
+#     vol_array = my_df['cur_vol'].values.astype(int)
+#     flag2 = False
+#     if round(np.mean(vol_array)) > 500:
+#         flag2 = True
+#
+#     if flag1 & flag2:
+#         flag = True
+#     return flag
+
+
+# mootdx获取最近数据趋势
+def check_data1(code):
     flag = False
-    # 模糊查询键值对
-    keys = r.scan_iter(match=f'order:{code}*')
+    df = tdx_client.transaction(symbol=code, start=0, offset=20)
+    bos = df['buyorsell'].values.astype(int).tolist()
+    percent = round(bos.count(0) / len(bos), 2)
+    flag1 = False
+    if percent > 0.6:
+        flag1 = True
 
-    # 获取匹配的键值对
-    result = []
-    for key in keys:
-        data = r.hgetall(key.decode())
-        # 将字节字符串转换为Unicode字符串
-        data = {key.decode(): value.decode() for key, value in data.items()}
-        result.append(data)
-    if len(result) == 0:
-        return flag
-    my_df = pd.DataFrame(result)
-    # 按照reversed_bytes0列进行升序排序
-    my_df = my_df.sort_values('reversed_bytes0')
-    # 获取最近的5个值
-    my_df = my_df.tail(5)
-
-    # 将price列转换为数组  价格
-    price_array = my_df['price'].values.astype(float)
-    # 判定数组增长趋势
-    threshold = 0.6
-    flag1 = is_data_increasing(price_array, threshold)
-
-    # cur_vol列转换为数组  当前成交量
-    vol_array = my_df['cur_vol'].values.astype(int)
     flag2 = False
-    if round(np.mean(vol_array)) > 300:
+    vols = df['vol'].values.astype(int).tolist()
+    avg_vol = sum(vols) / len(vols)
+    if avg_vol > 300:
         flag2 = True
 
     if flag1 & flag2:
@@ -219,11 +247,11 @@ def online_one_price(my_position):
             print('现价：' + str(price) + ', 成本价：' + str(cost_price), ', 盈亏：' + str(diff_yk))
 
             # # 设置保本价格
-            if price > cost_price * 1.006 and bb_price == 0.0:
+            if price > cost_price * 1.004 and bb_price == 0.0:
                 bb_price = 1.002 * cost_price
 
             # 设置最大价格
-            if price > cost_price * 1.015 and max_price == 0.0:
+            if price > cost_price * 1.01 and max_price == 0.0:
                 max_price = price
                 print('触发最大价===========================================')
 
@@ -232,7 +260,7 @@ def online_one_price(my_position):
 
             # 最大价格以激活 止盈 1%
             if max_price != 0.0:
-                if price <= cost_price * 1.01:
+                if price <= cost_price * 1.009:
                     gd_price = round(cost_price * 0.95, 2)
                     # 挂 -5% 清仓
                     user.sell(stock_code, price=gd_price, amount=enable_amount)
@@ -258,8 +286,8 @@ def online_one_price(my_position):
                 flag = False
                 break
 
-            # 止损价 -0.8%
-            if price <= cost_price * 0.992:
+            # 止损价 -0.4%
+            if price <= cost_price * 0.996:
                 gd_price = round(cost_price * 0.95, 2)
                 # 挂 -5% 清仓
                 user.sell(stock_code, price=gd_price, amount=enable_amount)
@@ -273,11 +301,14 @@ def online_one_price(my_position):
 
 
 # def test():
-#     # user.current_deal
-#     data = api.get_transaction_data(0, '123205', start=0, count=10)  # 获取最新的10笔交易数据
+#     # data = api.get_transaction_data(TDXParams.MARKET_SZ, '000001', 0, 30)
+#
+#     df = tdx_client.transaction(symbol='000001', start=0, offset=10)
+#     print()
 
 
 if __name__ == '__main__':
     get_stock_top()
     # sell_info(0)
+    # test()
 

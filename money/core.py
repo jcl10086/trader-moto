@@ -106,7 +106,7 @@ def get_stock_top():
         # 过滤未上市
         my_df = my_df[my_df['price'] > 0]
         # 过滤条件：reversed_bytes0
-        my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) & (my_df['reversed_bytes9'] <= 2)]
+        my_df = my_df[(my_df['reversed_bytes9'] >= 0.5) & (my_df['reversed_bytes9'] <= 1)]
         # 按照Score列进行降序排序，并获取Top 3行
         my_df = my_df.nlargest(3, 'reversed_bytes9')
         # 遍历指定的列
@@ -169,7 +169,7 @@ def get_stock_top():
 # mootdx获取最近数据趋势
 def check_data1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=12)
+    df = tdx_client.transaction(symbol=code, start=0, offset=8)
     # bos = df['buyorsell'].values.astype(int).tolist()
     # percent = round(bos.count(0) / len(bos), 2)
     # flag1 = False
@@ -187,7 +187,7 @@ def check_data1(code):
     flag2 = False
     vols = df['vol'].values.astype(int).tolist()
     avg_vol = sum(vols) / len(vols)
-    if avg_vol > 300:
+    if avg_vol > 200:
         flag2 = True
 
     if flag1 and flag2:

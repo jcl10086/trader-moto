@@ -106,7 +106,7 @@ def get_stock_top():
         # 过滤未上市
         my_df = my_df[my_df['price'] > 0]
         # 过滤条件：reversed_bytes0
-        my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) & (my_df['reversed_bytes9'] <= 2)]
+        my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) and (my_df['reversed_bytes9'] <= 2)]
         # 按照Score列进行降序排序，并获取Top 3行
         my_df = my_df.nlargest(3, 'reversed_bytes9')
         # 遍历指定的列
@@ -189,7 +189,7 @@ def check_data1(code):
     if avg_vol > 300:
         flag2 = True
 
-    if flag1 & flag2:
+    if flag1 and flag2:
         print(f'买卖量：{df["vol"].values}')
         flag = True
     return flag
@@ -318,3 +318,4 @@ def job_info():
 
 if __name__ == '__main__':
     job_info()
+    # get_stock_top()

@@ -1,3 +1,4 @@
+# 获取历史数据存入ck
 import uuid
 
 import pandas as pd
@@ -11,11 +12,11 @@ tdx_client = Quotes.factory(market='std')
 def get_online_all_price():
 
     dataframe = pd.read_excel('可转债.xlsx')
-    codes = dataframe['转债代码']
+    codes = dataframe['代码']
 
     stock_list = []
     for code in codes.items():
-        stock_list.append(code[1].split('.')[0])
+        stock_list.append(str(code[1]))
     merged_df = None
     for stock in stock_list[0:3]:
         print(f'{stock}')

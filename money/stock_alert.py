@@ -1,14 +1,15 @@
+# 获取当日最高价差值
 import pandas as pd
 from mootdx.quotes import Quotes
 
 client = Quotes.factory(market='std')
 
 dataframe = pd.read_excel('可转债.xlsx')
-codes = dataframe['转债代码']
+codes = dataframe['代码']
 
 stock_list = []
 for code in codes.items():
-    stock_list.append(code[1].split('.')[0])
+    stock_list.append(str(code[1]))
 
 merged_df = None
 batch_size = 80

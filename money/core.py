@@ -1,3 +1,4 @@
+# 核心交易
 import datetime
 import math
 import re
@@ -10,8 +11,6 @@ import redis
 from mootdx.quotes import Quotes
 
 from pytdx.hq import TdxHq_API
-from pytdx.params import TDXParams
-
 import easytrader
 
 # 初始化账号
@@ -23,8 +22,6 @@ api = TdxHq_API()
 # 连接到行情服务器
 api.connect('119.147.212.81', 7709)
 
-# 连接到Redis
-# r = redis.Redis(host='192.168.1.4', port=6379, db=0)
 tdx_client = Quotes.factory(market='std')
 
 
@@ -93,27 +90,20 @@ def current_deal_info():
 
 def get_stock_top():
     dataframe = pd.read_excel('可转债.xlsx')
-    codes = dataframe['转债代码']
+    codes = dataframe['代码']
 
     stock_list = []
     for code in codes.items():
-        # xx.SZ  xx.SH
-        if code[1].split('.')[1] == 'SZ':
-            stock_list.append((0, str(code[1].split('.')[0])))
-        elif code[1].split('.')[1] == 'SH':
-            stock_list.append((1, str(code[1].split('.')[0])))
-        else:
-            continue
+        stock_list.append(str(code[1]))
     # stock_list = [(0, '123205')]
     while True:
-        my_dict_all = []
+        my_df = None
         batch_size = 80
         for i in range(0, len(stock_list), batch_size):
-            my_dicts = api.get_security_quotes(stock_list[i:i + batch_size])
-            for my_dict in my_dicts:
-                data_dict = {'reversed_bytes9': my_dict['reversed_bytes9'], 'code': my_dict['code'], 'price': my_dict['price']}
-                my_dict_all.append(data_dict)
-        my_df = pd.DataFrame(my_dict_all)
+            df = tdx_client.quotes(symbol=stock_list[i:i + batch_size])
+            my_df = pd.concat([my_df, df], ignore_index=True)
+        # 过滤未上市
+        my_df = my_df[my_df['price'] > 0]
         # 过滤条件：reversed_bytes0
         my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) & (my_df['reversed_bytes9'] <= 2)]
         # 按照Score列进行降序排序，并获取Top 3行
@@ -178,11 +168,19 @@ def get_stock_top():
 def check_data1(code):
     flag = False
     df = tdx_client.transaction(symbol=code, start=0, offset=20)
-    bos = df['buyorsell'].values.astype(int).tolist()
-    percent = round(bos.count(0) / len(bos), 2)
+    # bos = df['buyorsell'].values.astype(int).tolist()
+    # percent = round(bos.count(0) / len(bos), 2)
+    # flag1 = False
+    # if percent > 0.6:
+    #   flag1 = True
+    # 买量
+    b = df[df['buyorsell'] == 0]['vol'].sum()
+    # 卖量
+    s = df[df['buyorsell'] == 1]['vol'].sum()
+    percent = round(b / (b + s), 3)
     flag1 = False
-    if percent > 0.6:
-        flag1 = True
+    if percent > 0.8:
+        flag = True
 
     flag2 = False
     vols = df['vol'].values.astype(int).tolist()

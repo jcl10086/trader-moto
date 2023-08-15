@@ -45,6 +45,7 @@ def buy_info(code, current_price, current_balance):
     gd_price = round(gd_price, 2)
     # 挂单数量
     gd_num = math.floor(current_balance / gd_price / 10) * 10
+    print(f'挂单价格：{gd_price}  挂单数量：{gd_num}')
     # 买入
     user.buy(code, price=gd_price, amount=gd_num)
     return gd_num
@@ -112,7 +113,7 @@ def get_stock_top():
         for index, row in my_df.iterrows():
             flag = check_data1(row['code'])
             if flag:
-                current_price = round(row['price'] / 100, 2)
+                current_price = round(row['price'], 2)
                 current_balance = get_balance()
                 # 买入数量
                 gd_num = buy_info(row['code'], current_price, current_balance)
@@ -167,7 +168,7 @@ def get_stock_top():
 # mootdx获取最近数据趋势
 def check_data1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=20)
+    df = tdx_client.transaction(symbol=code, start=0, offset=12)
     # bos = df['buyorsell'].values.astype(int).tolist()
     # percent = round(bos.count(0) / len(bos), 2)
     # flag1 = False
@@ -189,21 +190,22 @@ def check_data1(code):
         flag2 = True
 
     if flag1 & flag2:
+        print(f'买卖量：{df["vol"].values}')
         flag = True
     return flag
 
 
 # 判断数据大体上涨
-def is_data_increasing(data, threshold):
-    count = 0
-    for i in range(1, len(data)):
-        if data[i] > data[i-1]:
-            count += 1
-    ratio = count / len(data)
-    if ratio >= threshold:
-        return True
-    else:
-        return False
+# def is_data_increasing(data, threshold):
+#     count = 0
+#     for i in range(1, len(data)):
+#         if data[i] > data[i-1]:
+#             count += 1
+#     ratio = count / len(data)
+#     if ratio >= threshold:
+#         return True
+#     else:
+#         return False
 
 
 # 挂单卖出
@@ -305,8 +307,14 @@ def online_one_price(my_position):
 #     print()
 
 
-if __name__ == '__main__':
-    get_stock_top()
-    # sell_info(0)
-    # test()
+def job_info():
+    # 获取最新买入 stock_code 代码  cost_price 成本价  enable_amount 可用数量
+    current_deal = user.current_deal[0]
+    if current_deal.bs_type == 'B':
+        sell_info(0)
+    else:
+        get_stock_top()
 
+
+if __name__ == '__main__':
+    job_info()

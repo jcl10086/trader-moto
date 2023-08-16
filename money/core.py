@@ -106,14 +106,13 @@ def get_stock_top():
         # 过滤未上市
         my_df = my_df[my_df['price'] > 0]
         # 过滤条件：reversed_bytes0
-        my_df = my_df[(my_df['reversed_bytes9'] >= 0.5) & (my_df['reversed_bytes9'] <= 1)]
+        my_df = my_df[(my_df['reversed_bytes9'] >= 0.6) & (my_df['reversed_bytes9'] <= 1.5)]
         # 按照Score列进行降序排序，并获取Top 3行
         my_df = my_df.nlargest(3, 'reversed_bytes9')
         # 遍历指定的列
         for index, row in my_df.iterrows():
-            flag = check_data1(row['code'])
+            flag = check_data2(row['code'])
             if flag is True:
-                print(f'{flag}')
                 current_price = round(row['price'], 2)
                 current_balance = get_balance()
                 # 买入数量
@@ -123,8 +122,8 @@ def get_stock_top():
                 # 卖
                 sell_info(gd_num)
                 break
-            else:
-                print(f'{row["code"]}' + '检测失败')
+            # else:
+            #     print(f'{row["code"]}' + '检测失败')
         time.sleep(3)
 
 
@@ -196,6 +195,18 @@ def check_data1(code):
     return flag
 
 
+# 蚊子肉
+def check_data2(code):
+    flag = False
+    df = tdx_client.transaction(symbol=code, start=0, offset=100)
+    min_price = df['price'].min() / 10
+    current_price = df['price'][-1:].values[0] / 10
+    if current_price < 1.01 * min_price:
+        flag = True
+    print(f'code:{code} current:{current_price} min:{min_price}  {flag}')
+    return flag
+
+
 # 判断数据大体上涨
 # def is_data_increasing(data, threshold):
 #     count = 0
@@ -248,7 +259,7 @@ def online_one_price(my_position):
             print('现价：' + str(price) + ', 成本价：' + str(cost_price), ', 盈亏：' + str(diff_yk))
 
             # # 设置保本价格
-            if price > cost_price * 1.004 and bb_price == 0.0:
+            if price > cost_price * 1.002 and bb_price == 0.0:
                 bb_price = 1.002 * cost_price
 
             # 设置最大价格
@@ -319,5 +330,5 @@ def job_info():
 
 
 if __name__ == '__main__':
-    job_info()
-    # get_stock_top()
+    # job_info()
+    get_stock_top()

@@ -21,8 +21,15 @@ for i in range(0, len(stock_list), batch_size):
 merged_df = merged_df[(merged_df['high'] - merged_df['last_close']) / merged_df['last_close'] > 0.03].reset_index()
 # 最大价格与当前价格差值
 merged_df['diff'] = (merged_df['high'] - merged_df['price']) / merged_df['price']
+# 今日涨幅
+merged_df['zf'] = (merged_df['price'] - merged_df['last_close']) / merged_df['last_close']
+# 今日涨幅
+merged_df['max_zf'] = (merged_df['high'] - merged_df['last_close']) / merged_df['last_close']
 merged_df = merged_df.sort_values(by='diff', ascending=False).reset_index()
 
 for row in merged_df.itertuples():
     diff = round(row.diff * 100, 2)
-    print(f'{row.code}：差值空间{diff}%')
+    zf = round(row.zf * 100, 2)
+    max_zf = round(row.max_zf * 100, 2)
+    name = dataframe[dataframe['代码'] == int(row.code)].values[0][1]
+    print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')

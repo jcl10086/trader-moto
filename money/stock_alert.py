@@ -4,6 +4,9 @@ import time
 import pandas as pd
 from mootdx.quotes import Quotes
 
+from money import data_util
+from money.data_util import wx_push
+
 
 def job():
     client = Quotes.factory(market='std')
@@ -38,13 +41,12 @@ def job():
         zf = round(row.zf * 100, 2)
         max_zf = round(row.max_zf * 100, 2)
         name = dataframe[dataframe['代码'] == int(row.code)].values[0][1]
-        print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')
+        content = f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%'
+        data_util.wx_push(content)
+        # print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')
 
 
 if __name__ == '__main__':
     while True:
         job()
-        print()
-        print()
-        print()
         time.sleep(60)

@@ -68,12 +68,12 @@ def buy_info(code, current_price, current_balance):
 # 卖出策略1
 def sell_strategy1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=20)
-    num_buy = df[df['buyorsell'] == 1]['vol'].sum()
+    df = tdx_client.transaction(symbol=code, start=0, offset=10)
+    num_sell = df[df['buyorsell'] == 1]['vol'].sum()
     num_all = df['vol'].sum()
-    num_avg = df['vol'].mean()
-    diff = num_buy / num_all
-    if diff > 0.7 :
+    # num_avg = df['vol'].mean()
+    diff = num_sell / num_all
+    if diff > 0.7:
         flag = True
     print(f'{code}  {flag}')
     return flag
@@ -93,7 +93,7 @@ def job_core():
 
     # 卖出
     while True:
-        sell_strategy1('127090')
+        sell_strategy1('127080')
         time.sleep(3)
 
 

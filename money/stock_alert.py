@@ -36,14 +36,14 @@ def job():
 
     for row in merged_df.itertuples():
         diff = round(row.diff * 100, 2)
-        if diff < 5:
+        if diff < 3:
             continue
         zf = round(row.zf * 100, 2)
         max_zf = round(row.max_zf * 100, 2)
         name = dataframe[dataframe['代码'] == int(row.code)].values[0][1]
         content = f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%'
-        data_util.wx_push(content)
-        # print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')
+        # data_util.wx_push(content)
+        print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')
 
 
 if __name__ == '__main__':

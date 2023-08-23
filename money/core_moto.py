@@ -23,29 +23,30 @@ def get_codes():
 def get_speed(stock_list):
     # stock_list = stock_list[0:2200]
     my_df = None
-    batch_size = 80
+    batch_size = 50
     for i in range(0, len(stock_list), batch_size):
         df = tdx_client.quotes(symbol=stock_list[i:i + batch_size])
         my_df = pd.concat([my_df, df], ignore_index=True)
     # 过滤未上市
     my_df = my_df[my_df['price'] > 0]
-    # 过滤条件：reversed_bytes0
-    my_df = my_df[(my_df['reversed_bytes9'] >= 0.8) & (my_df['reversed_bytes9'] <= 3) &
-                  (my_df['price'] - my_df['lats_close'] / my_df['lats_close'] * 100 < 3)]
+    # 过滤条件：reversed_bytes9
+    my_df = my_df[(my_df['reversed_bytes9'] >= 0.5) & (my_df['reversed_bytes9'] <= 3)]
+    # 过滤涨幅
+    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 12]
     # 按照Score列进行降序排序，并获取Top 3行
-    my_df = my_df.nlargest(3, 'reversed_bytes9')
+    my_df = my_df.nlargest(5, 'reversed_bytes9')
     return my_df
 
 
 # 买入策略1
 def buy_strategy1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=40)
+    df = tdx_client.transaction(symbol=code, start=0, offset=20)
     num_buy = df[df['buyorsell'] == 0]['vol'].sum()
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.9 & num_avg > 500:
+    if diff > 0.7 and num_avg > 500:
         flag = True
     print(f'{code}  {flag}')
     return flag
@@ -64,15 +65,35 @@ def buy_info(code, current_price, current_balance):
     return gd_num
 
 
+# 卖出策略1
+def sell_strategy1(code):
+    flag = False
+    df = tdx_client.transaction(symbol=code, start=0, offset=20)
+    num_buy = df[df['buyorsell'] == 1]['vol'].sum()
+    num_all = df['vol'].sum()
+    num_avg = df['vol'].mean()
+    diff = num_buy / num_all
+    if diff > 0.7 :
+        flag = True
+    print(f'{code}  {flag}')
+    return flag
+
+
 def job_core():
-    stock_list = get_codes()
+    # 买入
+    # stock_list = get_codes()
+    # while True:
+    #     my_df = get_speed(stock_list)
+    #     for index, row in my_df.iterrows():
+    #         flag = buy_strategy1(row['code'])
+    #         if flag:
+    #             current_balance = 55000
+    #             buy_info(row['code'], row['price'], current_balance)
+    #     time.sleep(3)
+
+    # 卖出
     while True:
-        my_df = get_speed(stock_list)
-        for index, row in my_df.iterrows():
-            flag = buy_strategy1(row['code'])
-            if flag:
-                current_balance = 55000
-                buy_info(row['code'], row['price'], current_balance)
+        sell_strategy1('127090')
         time.sleep(3)
 
 

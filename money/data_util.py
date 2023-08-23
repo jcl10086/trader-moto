@@ -8,7 +8,7 @@ def wx_push(content):
     payload = json.dumps({
         "appToken": "AT_GfooTh9LONk6o4TKbeVtClOlQfQuz5N4",
         "content": content,
-        "summary": "消息摘要",
+        "summary": content,
         "contentType": 1,
         "uids": [
             "UID_ld2fuw8pCxJlLyugTNn7BLzgSW8q"

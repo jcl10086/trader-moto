@@ -36,7 +36,7 @@ def job():
 
     for row in merged_df.itertuples():
         diff = round(row.diff * 100, 2)
-        if diff < 2.8:
+        if diff < 5:
             continue
         zf = round(row.zf * 100, 2)
         max_zf = round(row.max_zf * 100, 2)

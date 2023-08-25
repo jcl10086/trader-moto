@@ -49,4 +49,6 @@ def job():
 if __name__ == '__main__':
     while True:
         job()
+        print()
+        print()
         time.sleep(60)

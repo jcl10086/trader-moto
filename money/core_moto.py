@@ -6,22 +6,27 @@ import pandas as pd
 
 from mootdx.quotes import Quotes
 
+import easytrader
+
 tdx_client = Quotes.factory(market='std')
+# 初始化账号
+user = easytrader.use('eastmoney')
+user.prepare('account.json')
 
 
 def get_codes():
-    dataframe = pd.read_excel('可转债.xlsx')
+    dataframe = pd.read_excel('股票1.xlsx')
     codes = dataframe['代码']
 
     stock_list = []
     for code in codes.items():
-        stock_list.append(str(code[1]))
+        stock_list.append(str(code[1]).zfill(6))
     return stock_list
 
 
 # 获取涨速
 def get_speed(stock_list):
-    # stock_list = stock_list[0:2200]
+    stock_list = stock_list[0:1200]
     my_df = None
     batch_size = 50
     for i in range(0, len(stock_list), batch_size):
@@ -32,23 +37,23 @@ def get_speed(stock_list):
     # 过滤条件：reversed_bytes9
     my_df = my_df[(my_df['reversed_bytes9'] >= 0.5) & (my_df['reversed_bytes9'] <= 3)]
     # 过滤涨幅
-    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 12]
+    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 3]
     # 按照Score列进行降序排序，并获取Top 3行
-    my_df = my_df.nlargest(5, 'reversed_bytes9')
+    my_df = my_df.nlargest(10, 'reversed_bytes9')
     return my_df
 
 
 # 买入策略1
 def buy_strategy1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=20)
+    df = tdx_client.transaction(symbol=code, start=0, offset=12)
     num_buy = df[df['buyorsell'] == 0]['vol'].sum()
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.7 and num_avg > 500:
+    if diff > 0.7 and num_avg > 1000:
         flag = True
-    print(f'{code}  {flag}')
+        print(f'{code}  {flag}')
     return flag
 
 
@@ -61,7 +66,7 @@ def buy_info(code, current_price, current_balance):
     gd_num = math.floor(current_balance / gd_price / 10) * 10
     print(f'挂单价格：{gd_price}  挂单数量：{gd_num}')
     # 买入
-    tdx_client.buy(code, price=gd_price, amount=gd_num)
+    user.buy(code, price=gd_price, amount=gd_num)
     return gd_num
 
 
@@ -81,20 +86,20 @@ def sell_strategy1(code):
 
 def job_core():
     # 买入
-    # stock_list = get_codes()
-    # while True:
-    #     my_df = get_speed(stock_list)
-    #     for index, row in my_df.iterrows():
-    #         flag = buy_strategy1(row['code'])
-    #         if flag:
-    #             current_balance = 55000
-    #             buy_info(row['code'], row['price'], current_balance)
-    #     time.sleep(3)
+    stock_list = get_codes()
+    while True:
+        my_df = get_speed(stock_list)
+        for index, row in my_df.iterrows():
+            flag = buy_strategy1(row['code'])
+            if flag:
+                current_balance = 62000
+                # buy_info(row['code'], row['price'], current_balance)
+        time.sleep(3)
 
     # 卖出
-    while True:
-        sell_strategy1('127080')
-        time.sleep(3)
+    # while True:
+    #     sell_strategy1('127080')
+    #     time.sleep(3)
 
 
 if __name__ == '__main__':

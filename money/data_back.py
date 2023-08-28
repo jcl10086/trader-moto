@@ -8,7 +8,7 @@ def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230823')
+        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230825')
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
 
@@ -22,7 +22,7 @@ def buy_strategy1(code, df):
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.8 and num_avg > 500:
+    if diff > 0.7 and num_avg > 500:
         flag = True
         print(f'{code} {df[-1:]["time"].values[0]} {flag}')
     return flag
@@ -46,12 +46,12 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    # code = '002750'
-    # core_job(code)
+    code = '000010'
+    core_job(code)
 
-    codes = get_codes()
-    for code in codes:
-        core_job(code)
-        print()
-        print()
-        print()
+    # codes = get_codes()
+    # for code in codes:
+    #     core_job(code)
+    #     print()
+    #     print()
+    #     print()

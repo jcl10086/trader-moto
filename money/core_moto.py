@@ -15,7 +15,7 @@ user.prepare('account.json')
 
 
 def get_codes():
-    dataframe = pd.read_excel('股票1.xlsx')
+    dataframe = pd.read_excel('可转债.xlsx')
     codes = dataframe['代码']
 
     stock_list = []
@@ -26,7 +26,7 @@ def get_codes():
 
 # 获取涨速
 def get_speed(stock_list):
-    stock_list = stock_list[0:1200]
+    # stock_list = stock_list[0:1200]
     my_df = None
     batch_size = 50
     for i in range(0, len(stock_list), batch_size):
@@ -37,7 +37,7 @@ def get_speed(stock_list):
     # 过滤条件：reversed_bytes9
     my_df = my_df[(my_df['reversed_bytes9'] >= 0.5) & (my_df['reversed_bytes9'] <= 3)]
     # 过滤涨幅
-    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 3]
+    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 5]
     # 按照Score列进行降序排序，并获取Top 3行
     my_df = my_df.nlargest(10, 'reversed_bytes9')
     return my_df
@@ -51,9 +51,9 @@ def buy_strategy1(code):
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.7 and num_avg > 1000:
+    if diff > 0.7 and num_avg > 200:
         flag = True
-        print(f'{code}  {flag}')
+    print(f'{code}  {flag}')
     return flag
 
 
@@ -92,8 +92,8 @@ def job_core():
         for index, row in my_df.iterrows():
             flag = buy_strategy1(row['code'])
             if flag:
-                current_balance = 62000
-                # buy_info(row['code'], row['price'], current_balance)
+                current_balance = 120000
+                buy_info(row['code'], row['price'], current_balance)
         time.sleep(3)
 
     # 卖出

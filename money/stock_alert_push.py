@@ -70,7 +70,7 @@ def alert_strategy2(merged_df):
         # 10分钟差值
         df = tdx_client.transaction(symbol=row['code'], start=0, offset=200)
         alert_diff = (df['price'].max() - df['price'][-1:].values[0]) / df['price'][-1:].values[0]
-        if round(alert_diff * 100, 2) > 1:
+        if round(alert_diff * 100, 2) > 2.5:
             current_timestamp = int(time.time())
             # 要查找的键
             key_to_find = 'code'

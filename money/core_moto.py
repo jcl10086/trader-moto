@@ -1,4 +1,5 @@
 # 买入策略
+import datetime
 import math
 import time
 
@@ -71,16 +72,24 @@ def buy_info(code, current_price, current_balance):
 
 
 # 卖出策略1
-def sell_strategy1(code):
+def sell_strategy1(code, gd_price, enable_amount):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=10)
+    df = tdx_client.transaction(symbol=code, start=0, offset=40)
     num_sell = df[df['buyorsell'] == 1]['vol'].sum()
     num_all = df['vol'].sum()
     # num_avg = df['vol'].mean()
     diff = num_sell / num_all
-    if diff > 0.7:
+    if diff > 0.8:
+        # 获取当前时间对象
+        current_time = datetime.now()
+        # 指定要使用的时间格式
+        time_format = "%Y-%m-%d %H:%M:%S"  # 例如："2023-08-28 15:30:00"
+        # 将时间对象格式化为字符串
+        formatted_time = current_time.strftime(time_format)
+        # 挂 -5% 清仓
+        # user.sell(code, price=gd_price, amount=enable_amount)
         flag = True
-    print(f'{code}  {flag}')
+        print(f'{formatted_time}  {code}  {flag}')
     return flag
 
 
@@ -98,7 +107,7 @@ def job_core():
 
     # 卖出
     # while True:
-    #     sell_strategy1('127080')
+    #     sell_strategy1('123200', '200', '560')
     #     time.sleep(3)
 
 

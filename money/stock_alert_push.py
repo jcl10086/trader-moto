@@ -36,7 +36,7 @@ def get_online_datas(stock_list):
 # def alert_strategy1(merged_df):
 #     # 最大价格与当前价格差值
 #     merged_df['diff'] = (merged_df['high'] - merged_df['price']) / merged_df['price']
-#     merged_df = merged_df[round(merged_df['diff'] * 100, 2) > 5]
+#     merged_df = merged_df[round(merged_df['diff'] * 100, 2) > 3]
 #     # 今日涨幅
 #     merged_df['zf'] = (merged_df['price'] - merged_df['last_close']) / merged_df['last_close']
 #     # 今日最大涨幅
@@ -50,27 +50,28 @@ def get_online_datas(stock_list):
 #         max_zf = round(row.max_zf * 100, 2)
 #         name = dataframe[dataframe['代码'] == int(row.code)].values[0][1]
 #         content = f'{name}  {row.code}：差值空间{diff}%  今日最大涨幅：{max_zf}   今日涨幅：{zf}%'
+#         print(content)
 #         # contents.append(content)
-#         contents.append(row.code)
-#         codes_after.append(row.code)
+#         # contents.append(row.code)
+#         # codes_after.append(row.code)
 #         # data_util.wx_push(content)
 #         # print(f'{name}  {row.code}：差值空间{diff}%  最大涨幅：{max_zf}   今日涨幅：{zf}%')
 #     # if codes_before != codes_after:
 #     #     data_util.wx_push(contents)
 #     # codes_after = codes_before
-#     return contents
+#     # return contents
 
 
 def alert_strategy2(merged_df):
     # 过滤未上市
     merged_df = merged_df[merged_df['price'] > 0]
     # 过滤条件：reversed_bytes9
-    merged_df = merged_df[(merged_df['reversed_bytes9'] <= -0.5)]
+    merged_df = merged_df[(merged_df['reversed_bytes9'] >= 0.2)]
     for index, row in merged_df.iterrows():
         # 10分钟差值
         df = tdx_client.transaction(symbol=row['code'], start=0, offset=200)
         alert_diff = (df['price'].max() - df['price'][-1:].values[0]) / df['price'][-1:].values[0]
-        if round(alert_diff * 100, 2) > 2.5:
+        if round(alert_diff * 100, 2) > 2:
             current_timestamp = int(time.time())
             # 要查找的键
             key_to_find = 'code'
@@ -102,9 +103,10 @@ if __name__ == '__main__':
     stock_list = get_stocks()
     while True:
         merged_df = get_online_datas(stock_list)
+        # alert_strategy1(merged_df)
         alert_strategy2(merged_df)
         # contents = contents[0:1]
         # if codes_before != codes_after:
         #     data_util.wx_push(str(contents))
         # codes_before = codes_after
-        # time.sleep(3)
+        time.sleep(3)

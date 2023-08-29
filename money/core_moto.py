@@ -52,7 +52,7 @@ def buy_strategy1(code):
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.7 and num_avg > 200:
+    if diff > 0.7 and num_avg > 300:
         flag = True
     print(f'{code}  {flag}')
     return flag
@@ -101,7 +101,7 @@ def job_core():
         for index, row in my_df.iterrows():
             flag = buy_strategy1(row['code'])
             if flag:
-                current_balance = 120000
+                current_balance = 119000
                 buy_info(row['code'], row['price'], current_balance)
         time.sleep(3)
 

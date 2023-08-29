@@ -2,13 +2,18 @@ import pandas as pd
 from mootdx.quotes import Quotes
 
 tdx_client = Quotes.factory(market='std')
+high = 0
+low = 10000
+# 计数
+num = 0
 
 
 def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230825')
+        # df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230828')
+        df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
 
@@ -22,21 +27,88 @@ def buy_strategy1(code, df):
     num_all = df['vol'].sum()
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
-    if diff > 0.7 and num_avg > 500:
+    if diff > 0.8 and num_avg > 400:
         flag = True
         print(f'{code} {df[-1:]["time"].values[0]} {flag}')
     return flag
 
 
+def sell_strategy1(code, df):
+    df = df[-30:]
+    num_sell = df[df['buyorsell'] == 1]['vol'].sum()
+    num_all = df['vol'].sum()
+    # num_avg = df['vol'].mean()
+    diff = num_sell / num_all
+    if diff > 0.7:
+        print(f'{code} {df[-1:]["time"].values[0]}')
+
+
+def sell_strategy2(code, df):
+    df = df[-40:]
+    high = 0
+    low = 10000
+    i = 0
+    for index, row in df.iterrows():
+        price = row['price']
+        if high < price:
+            high = price
+            low = high
+            i = 0
+        else:
+            if price < low:
+                low = price
+                i = i + 1
+            if i == 5:
+                ts = row['time']
+                print(f'{code} {ts} {price}')
+    # num_sell = df[df['buyorsell'] == 1]['vol'].sum()
+    # num_all = df['vol'].sum()
+    # # num_avg = df['vol'].mean()
+    # diff = num_sell / num_all
+    # if diff > 0.7:
+    #     print(f'{code} {df[-1:]["time"].values[0]}')
+
+
+def sell_strategy3(code, df):
+    high = 0
+    i = 0
+    for index, row in df.iterrows():
+        price = row['price']
+        if high <= price:
+            high = price
+            i = 0
+            ts = row['time']
+        else:
+            i = i + 1
+        if i == 40:
+            print(f'{code} {ts} {price}')
+            high = 0
+            i = 0
+
+
+def sell_strategy4(code, df):
+    price = df['price'].values[0]
+    global high, low
+    if high <= price:
+        high = price
+    if low >= price:
+        low = price
+    print()
+
+
 def core_job(code):
     my_df = get_data_by_code(code)
-    for i in range(13, len(my_df) - 1):
+    for i in range(100, len(my_df) - 1):
         df = my_df[1:i]
         buy_strategy1(code, df)
+    #     sell_strategy2(code, df)
+    # df = my_df[1:200]
+    # df = my_df
+    # sell_strategy4(code, df)
 
 
 def get_codes():
-    dataframe = pd.read_excel('股票1.xlsx')
+    dataframe = pd.read_excel('可转债.xlsx')
     codes = dataframe['代码']
 
     stock_list = []
@@ -46,7 +118,7 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    code = '000010'
+    code = '301137'
     core_job(code)
 
     # codes = get_codes()

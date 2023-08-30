@@ -66,12 +66,14 @@ def alert_strategy2(merged_df):
     # 过滤未上市
     merged_df = merged_df[merged_df['price'] > 0]
     # 过滤条件：reversed_bytes9
-    merged_df = merged_df[(merged_df['reversed_bytes9'] >= 0.2)]
+    # merged_df = merged_df[(merged_df['reversed_bytes9'] >= 0.2)]
     for index, row in merged_df.iterrows():
+        # 当前差值
+        diff = round((row['high'] - row['price']) / row['price'] * 100, 2)
         # 10分钟差值
-        df = tdx_client.transaction(symbol=row['code'], start=0, offset=200)
-        alert_diff = (df['price'].max() - df['price'][-1:].values[0]) / df['price'][-1:].values[0]
-        if round(alert_diff * 100, 2) > 2:
+        # df = tdx_client.transaction(symbol=row['code'], start=0, offset=600)
+        # alert_diff = (df['price'].max() - df['price'][-1:].values[0]) / df['price'][-1:].values[0]
+        if diff > 5:
             current_timestamp = int(time.time())
             # 要查找的键
             key_to_find = 'code'
@@ -83,6 +85,7 @@ def alert_strategy2(merged_df):
                         ts = item['ts']
                         if current_timestamp - ts > 5 * 60:
                             content = f'{row["code"]}'
+                            print(content)
                             data_util.wx_push(content)
                             # 移除旧值
                             alert_before = {'code': row['code'], 'ts': ts}
@@ -94,6 +97,7 @@ def alert_strategy2(merged_df):
                         continue
             else:
                 content = f'{row["code"]}'
+                print(content)
                 data_util.wx_push(content)
                 alert = {'code': row['code'], 'ts': current_timestamp}
                 alert_data.append(alert)

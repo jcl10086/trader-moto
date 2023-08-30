@@ -125,21 +125,21 @@ def sell_strategy2(code, cb_price, enable_amount):
 
 def job_core():
     # 买入
-    # stock_list = get_codes()
-    # while True:
-    #     my_df = get_speed(stock_list)
-    #     for index, row in my_df.iterrows():
-    #         flag = buy_strategy1(row['code'])
-    #         if flag:
-    #             current_balance = 113000
-    #             buy_info(row['code'], row['price'], current_balance)
-    #     time.sleep(3)
+    stock_list = get_codes()
+    while True:
+        my_df = get_speed(stock_list)
+        for index, row in my_df.iterrows():
+            flag = buy_strategy1(row['code'])
+            if flag:
+                current_balance = 100000
+                buy_info('0000001', 100.01, current_balance)
+        time.sleep(3)
 
     # 卖出
     # while True:
     #     sell_strategy1('123200', '200', '560')
     #     time.sleep(3)
-    sell_strategy2('123219', 127.1, 79)
+    # sell_strategy2('123219', 127.1, 79)
 
 
 if __name__ == '__main__':

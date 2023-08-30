@@ -101,7 +101,7 @@ def job_core():
         for index, row in my_df.iterrows():
             flag = buy_strategy1(row['code'])
             if flag:
-                current_balance = 119000
+                current_balance = 113000
                 buy_info(row['code'], row['price'], current_balance)
         time.sleep(3)
 

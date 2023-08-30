@@ -20,8 +20,9 @@ def wx_push(content):
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
+    response.text
 
-    print(response.text)
+    # print(response.text)
 
 
 if __name__ == '__main__':

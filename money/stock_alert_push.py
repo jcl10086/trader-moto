@@ -68,21 +68,25 @@ def alert_strategy2(merged_df):
     merged_df = merged_df[merged_df['price'] > 0]
     # 过滤条件：reversed_bytes9
     # merged_df = merged_df[(merged_df['reversed_bytes9'] >= 0.2)]
-    merged_df['diff'] = (merged_df['high'] - merged_df['low']) / merged_df['low']
-    merged_df = merged_df[round(merged_df['diff'] * 100, 2) > 3]
+    merged_df['zf'] = (merged_df['high'] - merged_df['last_close']) / merged_df['last_close']
+    merged_df = merged_df[round(merged_df['zf'] * 100, 2) > 4]
+
+    merged_df['diff'] = (merged_df['high'] - merged_df['price']) / merged_df['price']
+    merged_df = merged_df[round(merged_df['diff'] * 100, 2) > 2]
+
     for index, row in merged_df.iterrows():
         # 当前差值
         # diff = round((row['high'] - row['price']) / row['price'] * 100, 2)
         # 10分钟差值
-        df = tdx_client.transaction(symbol=row['code'], start=0, offset=300)
-        max_price = df['price'].max()
+        df = tdx_client.transaction(symbol=row['code'], start=0, offset=100)
+        # max_price = df['price'].max()
         # 最近5分钟值
-        df_after = df[-100:]
+        # df_after = df[-100:]
         price = df['price'][-1:].values[0]
-        diff = round((max_price - price) / price * 100, 2)
+        # diff = round((max_price - price) / price * 100, 2)
         # 最近5分钟最小值
-        min_price = df_after['price'].min()
-        if 1.001 * min_price <= price <= 1.007 * min_price and diff > 1:
+        min_price = df['price'].min()
+        if 0.999 * min_price <= price <= 1.007 * min_price:
             current_timestamp = int(time.time())
             # 要查找的键
             key_to_find = 'code'

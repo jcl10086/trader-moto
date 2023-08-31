@@ -104,7 +104,7 @@ def sell_strategy2(code, cb_price, enable_amount):
     # 阈值价
     fz_price = cb_price * 0.98
     # 挂单价
-    gd_price = cb_price * 0.9
+    gd_price = round(cb_price * 0.9, 2)
     while True:
         df = tdx_client.quotes(symbol=code)
         price = df['price'].values[0]
@@ -114,7 +114,7 @@ def sell_strategy2(code, cb_price, enable_amount):
         if price > cb_price * 1.01:
             fz_price = cb_price * 1.005
         if price > cb_price * 1.015:
-            fz_price = high * 0.99
+            fz_price = high * 0.98
 
         yk = round((price - cb_price) / cb_price * 100, 2)
         if price < fz_price:
@@ -125,21 +125,21 @@ def sell_strategy2(code, cb_price, enable_amount):
 
 def job_core():
     # 买入
-    stock_list = get_codes()
-    while True:
-        my_df = get_speed(stock_list)
-        for index, row in my_df.iterrows():
-            flag = buy_strategy1(row['code'])
-            if flag:
-                current_balance = 100000
-                buy_info(row['code'], row['price'], current_balance)
-        time.sleep(3)
+    # stock_list = get_codes()
+    # while True:
+    #     my_df = get_speed(stock_list)
+    #     for index, row in my_df.iterrows():
+    #         flag = buy_strategy1(row['code'])
+    #         if flag:
+    #             current_balance = 100000
+    #             buy_info(row['code'], row['price'], current_balance)
+    #     time.sleep(3)
 
     # 卖出
     # while True:
     #     sell_strategy1('123200', '200', '560')
     #     time.sleep(3)
-    # sell_strategy2('123219', 127.1, 79)
+    sell_strategy2('128025', 192.788, 50)
 
 
 if __name__ == '__main__':

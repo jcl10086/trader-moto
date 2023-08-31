@@ -132,7 +132,7 @@ def job_core():
             flag = buy_strategy1(row['code'])
             if flag:
                 current_balance = 100000
-                buy_info('0000001', 100.01, current_balance)
+                buy_info(row['code'], row['price'], current_balance)
         time.sleep(3)
 
     # 卖出

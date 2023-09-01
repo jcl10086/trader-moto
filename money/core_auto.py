@@ -80,11 +80,13 @@ def get_speed(stock_list):
 # 买入策略1
 def buy_strategy1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=40)
-    df = df[0:38]
+    df = tdx_client.transaction(symbol=code, start=0, offset=10)
+    price_max = df['price'].max()
+    price_last = df['price'][-1:]
+    # df = df[0:38]
     diff = round((df['price'][len(df) - 1] - df['price'][0]) / df['price'][0] * 100, 2)
     avg_vol = df['vol'].mean()
-    if diff > 0.3 and avg_vol > 100:
+    if diff > 0.3 and avg_vol > 200 and price_max == price_last:
         flag = True
     return flag
 
@@ -104,14 +106,14 @@ def sell_strategy2(code, cb_price, enable_amount):
             high = price
 
         # 涨0.5%  阈值0.3%
-        if price > cb_price * 1.005:
-            fz_price = cb_price * 1.003
+        # if price > cb_price * 1.005:
+        #     fz_price = cb_price * 1.003
         # 涨1%  阈值0.5%
         if price > cb_price * 1.01:
             fz_price = cb_price * 1.005
         # 涨1% - 1.5% 阈值1%
-        if cb_price * 1.015 >= price > cb_price * 1.01:
-            fz_price = cb_price * 1.01
+        # if cb_price * 1.015 >= price > cb_price * 1.01:
+        #     fz_price = cb_price * 1.01
         if price > cb_price * 1.015:
             fz_price = high * 0.985
 

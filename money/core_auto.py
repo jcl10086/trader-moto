@@ -76,7 +76,7 @@ def get_speed(stock_list):
     # 过滤未上市
     my_df = my_df[my_df['price'] > 0]
     # 过滤条件：reversed_bytes9
-    my_df = my_df[(my_df['reversed_bytes9'] >= 0.3) & (my_df['reversed_bytes9'] <= 1.5)]
+    my_df = my_df[(my_df['reversed_bytes9'] >= 0.2) & (my_df['reversed_bytes9'] <= 1.5)]
     # 过滤涨幅
     # my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 5]
     # 按照Score列进行降序排序，并获取Top 3行
@@ -87,13 +87,14 @@ def get_speed(stock_list):
 # 买入策略1
 def buy_strategy1(code):
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=10)
-    price_max = df['price'].max()
+    df = tdx_client.transaction(symbol=code, start=0, offset=60)
+    price_min = df['price'].min()
+    # 取最后10个值的最大值
+    price_max = df['price'].tail(10).max()
     price_last = df['price'][len(df) - 1]
-    # df = df[0:38]
-    diff = round((df['price'][len(df) - 1] - df['price'][0]) / df['price'][0] * 100, 2)
+    diff = round((price_last - df['price'].iloc[-10]) / df['price'].iloc[-10] * 100, 2)
     avg_vol = df['vol'].mean()
-    if diff > 0.3 and avg_vol > 200 and price_max == price_last:
+    if diff > 0.2 and avg_vol > 200 and price_max == price_last and price_min * 1.001 < price_last < price_min * 1.005:
         flag = True
     return flag
 
@@ -163,11 +164,12 @@ def core_job():
     positions = position_info()
     if len(positions) == 0:
         return
+    position = positions[0]
     # 获取最新买入成交信息
     deal = current_deal_info()
     code = deal.stock_code
     cb_price = deal.deal_price
-    enable_amount = deal.deal_amount
+    enable_amount = position.enable_amount
     sell_strategy2(code, cb_price, enable_amount)
 
 

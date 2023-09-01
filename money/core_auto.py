@@ -82,7 +82,7 @@ def buy_strategy1(code):
     flag = False
     df = tdx_client.transaction(symbol=code, start=0, offset=10)
     price_max = df['price'].max()
-    price_last = df['price'][-1:]
+    price_last = df['price'][len(df) - 1]
     # df = df[0:38]
     diff = round((df['price'][len(df) - 1] - df['price'][0]) / df['price'][0] * 100, 2)
     avg_vol = df['vol'].mean()
@@ -93,6 +93,8 @@ def buy_strategy1(code):
 
 # 卖出策略2
 def sell_strategy2(code, cb_price, enable_amount):
+    flag_one = False
+    flag_two = False
     flag = False
     high = 0
     # 阈值价 止损0.5%
@@ -106,10 +108,12 @@ def sell_strategy2(code, cb_price, enable_amount):
             high = price
 
         # 涨0.5%  阈值0.3%
-        # if price > cb_price * 1.005:
-        #     fz_price = cb_price * 1.003
+        if price > cb_price * 1.005 and flag_one == False:
+            flag_one = True
+            fz_price = cb_price * 1.003
         # 涨1%  阈值0.5%
-        if price > cb_price * 1.01:
+        if price > cb_price * 1.01 and flag_two == False:
+            flag_two = True
             fz_price = cb_price * 1.005
         # 涨1% - 1.5% 阈值1%
         # if cb_price * 1.015 >= price > cb_price * 1.01:
@@ -122,7 +126,7 @@ def sell_strategy2(code, cb_price, enable_amount):
         if price < fz_price:
             user.sell(code, price=gd_price, amount=enable_amount)
             flag = True
-        print(f'{code} {price} {yk}%  清仓：{flag}')
+        print(f'{code} {price} {yk}%  阈值：{fz_price}  清仓：{flag}')
         if flag:
             break
         time.sleep(3)
@@ -142,8 +146,9 @@ def core_job():
                 flag = buy_strategy1(code)
                 if flag:
                     enable_balance = get_balance()
-                    buy_info(code, price, enable_balance)
-                    break
+                    if enable_balance > 10000:
+                        buy_info(code, price, enable_balance)
+                        break
             if flag:
                 break
             time.sleep(3)

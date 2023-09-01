@@ -45,6 +45,13 @@ def position_info():
     return positions_new
 
 
+def current_deal_info():
+    # 获取最新买入 stock_code 代码  deal_price 成本价  deal_amount 可用数量
+    for deal in user.current_deal:
+        if deal.bs_type == 'B':
+            return deal
+
+
 # 挂单买入
 def buy_info(code, price, enable_balance):
     # 挂单股价
@@ -156,10 +163,11 @@ def core_job():
     positions = position_info()
     if len(positions) == 0:
         return
-    position = positions[0]
-    code = position.stock_code
-    cb_price = position.cost_price
-    enable_amount = position.enable_amount
+    # 获取最新买入成交信息
+    deal = current_deal_info()
+    code = deal.stock_code
+    cb_price = deal.deal_price
+    enable_amount = deal.deal_amount
     sell_strategy2(code, cb_price, enable_amount)
 
 

@@ -36,9 +36,11 @@ def get_speed(stock_list):
     # 过滤未上市
     my_df = my_df[my_df['price'] > 0]
     # 过滤条件：reversed_bytes9
-    my_df = my_df[(my_df['reversed_bytes9'] >= 1) & (my_df['reversed_bytes9'] <= 3)]
+    my_df = my_df[(my_df['reversed_bytes9'] >= 1) & (my_df['reversed_bytes9'] <= 5)]
     # 过滤涨幅
-    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 3]
+    my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 4]
+    # 过滤当前价小于竞价
+    my_df = my_df[my_df['price'] > my_df['open']]
     # 按照Score列进行降序排序，并获取Top 3行
     # my_df = my_df.nlargest(10, 'reversed_bytes9')
     return my_df
@@ -49,7 +51,7 @@ def buy_strategy1(code):
     # 阈值平均量
     num_flag = 0
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=12)
+    df = tdx_client.transaction(symbol=code, start=0, offset=10)
     num_buy = df[df['buyorsell'] == 0]['vol'].sum()
     num_sell = df[df['buyorsell'] == 1]['vol'].sum()
     num_all = num_buy + num_sell

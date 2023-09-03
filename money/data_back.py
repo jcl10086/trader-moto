@@ -6,13 +6,14 @@ high = 0
 low = 10000
 # 计数
 num = 0
+dataframe = pd.read_excel('创业板.xlsx')
 
 
 def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230829')
+        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230901')
         # df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
@@ -28,6 +29,32 @@ def buy_strategy1(code, df):
     num_avg = df['vol'].mean()
     diff = num_buy / num_all
     if diff > 0.8 and num_avg > 400:
+        flag = True
+        print(f'{code} {df[-1:]["time"].values[0]} {flag}')
+    return flag
+
+
+# 买入策略1
+def buy_strategy2(code, df):
+    df_before = df
+    df = df[-10:]
+    flag = False
+    # df = tdx_client.transaction(symbol=code, start=0, offset=12)
+    num_buy = df[df['buyorsell'] == 0]['vol'].sum()
+    num_sell = df[df['buyorsell'] == 1]['vol'].sum()
+    num_all = num_buy + num_sell
+    num_avg = num_all / len(df)
+    diff = num_buy / num_all
+
+    # 总流通
+    nums = dataframe[dataframe['代码'] == int(code)]['流通股(亿)'].values[0]
+    if nums < 1.2:
+        num_flag = 120
+    elif 1.2 <= nums < 2.5:
+        num_flag = 400
+    else:
+        num_flag = 1000
+    if diff > 0.8 and num_avg > num_flag and df['price'].values[-1] > df_before['price'].values[0]:
         flag = True
         print(f'{code} {df[-1:]["time"].values[0]} {flag}')
     return flag
@@ -98,9 +125,9 @@ def sell_strategy4(code, df):
 
 def core_job(code):
     my_df = get_data_by_code(code)
-    for i in range(100, len(my_df) - 1):
-        df = my_df[1:i]
-        buy_strategy1(code, df)
+    for i in range(11, len(my_df) - 1):
+        df = my_df[0:i]
+        buy_strategy2(code, df)
     #     sell_strategy2(code, df)
     # df = my_df[1:200]
     # df = my_df
@@ -108,7 +135,6 @@ def core_job(code):
 
 
 def get_codes():
-    dataframe = pd.read_excel('可转债.xlsx')
     codes = dataframe['代码']
 
     stock_list = []
@@ -118,7 +144,7 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    code = '301137'
+    code = '301320'
     core_job(code)
 
     # codes = get_codes()

@@ -75,10 +75,10 @@ def buy_strategy1(code):
 # 挂单买入
 def buy_info(code, price, enable_balance):
     # 挂单股价
-    gd_price = price * 1.03
+    gd_price = price * 1.02
     gd_price = round(gd_price, 2)
     # 挂单数量
-    gd_num = math.floor(enable_balance / gd_price / 10) * 10
+    gd_num = math.floor(enable_balance / gd_price / 100) * 100
     print(f'挂单价格：{gd_price}  挂单数量：{gd_num}')
     # 买入
     user.buy(code, price=gd_price, amount=gd_num)
@@ -93,11 +93,15 @@ def core_job():
         price = row['price']
         flag = buy_strategy1(code)
         if flag:
-            enable_balance = 100000
+            enable_balance = 1000
             buy_info(code, price, enable_balance)
+            break
 
 
 if __name__ == '__main__':
+    target_time = datetime.time(9, 30, 28)
     while True:
-        core_job()
+        current_time = datetime.datetime.now().time()
+        if current_time >= target_time:
+            core_job()
         time.sleep(3)

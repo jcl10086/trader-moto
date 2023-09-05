@@ -99,14 +99,30 @@ def buy_strategy1(code):
     return flag
 
 
+# 买入策略1
+def buy_strategy2(code):
+    flag = False
+    df = tdx_client.transaction(symbol=code, start=0, offset=10)
+    num_buy = df[df['buyorsell'] == 0]['vol'].sum()
+    num_sell = df[df['buyorsell'] == 1]['vol'].sum()
+    num_all = num_buy + num_sell
+    num_avg = num_all / len(df)
+    diff = num_buy / num_all
+
+    if diff > 0.7 and num_avg > 300:
+        flag = True
+    print(f'{code} {df[-1:]["time"].values[0]} {flag}')
+    return flag
+
+
 # 卖出策略2
 def sell_strategy2(code, cb_price, enable_amount):
     flag_one = False
     flag_two = False
     flag = False
     high = 0
-    # 阈值价 止损0.5%
-    fz_price = cb_price * 0.995
+    # 阈值价 止损2%
+    fz_price = cb_price * 0.98
     # 挂单价
     gd_price = round(cb_price * 0.9, 2)
     while True:
@@ -116,13 +132,13 @@ def sell_strategy2(code, cb_price, enable_amount):
             high = price
 
         # 涨0.5%  阈值0.3%
-        if price > cb_price * 1.005 and flag_one == False:
-            flag_one = True
-            fz_price = cb_price * 1.003
+        # if price > cb_price * 1.005 and flag_one == False:
+        #     flag_one = True
+        #     fz_price = cb_price * 1.003
         # 涨1%  阈值0.5%
-        if price > cb_price * 1.01 and flag_two == False:
+        if price > cb_price * 1.015 and flag_two == False:
             flag_two = True
-            fz_price = cb_price * 1.005
+            fz_price = cb_price * 1.01
         # 涨1% - 1.5% 阈值1%
         # if cb_price * 1.015 >= price > cb_price * 1.01:
         #     fz_price = cb_price * 1.01
@@ -151,7 +167,7 @@ def core_job():
             for index, row in my_df.iterrows():
                 code = row['code']
                 price = row['price']
-                flag = buy_strategy1(code)
+                flag = buy_strategy2(code)
                 if flag:
                     enable_balance = get_balance()
                     if enable_balance > 10000:

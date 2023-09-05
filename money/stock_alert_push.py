@@ -54,14 +54,14 @@ def buy_strategy1(row):
     price = df['price'].values[-1]
     diff = round((price_max - price) / price * 100, 2)
     if diff > 2:
-        alert_merge(row)
+        alert_merge(row, diff)
         # name = dataframe[dataframe['代码'] == int(code)].values[0][1]
         # content = f'{code} {name} {diff}'
         # data_util.wx_push(content)
     return flag
 
 
-def alert_merge(row):
+def alert_merge(row, diff):
     current_timestamp = int(time.time())
     key_to_find = 'code'
     # 使用列表推导式查找键对应的值
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         my_df = get_speed(stock_list)
         for index, row in my_df.iterrows():
             diff = round((row.high - row.price) / row.price * 100, 2)
-            if diff > 5:
-                alert_merge(row)
+            if diff > 6:
+                alert_merge(row, diff)
             buy_strategy1(row)
         time.sleep(3)

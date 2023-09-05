@@ -51,7 +51,7 @@ def buy_strategy1(code):
     # 阈值平均量
     num_flag = 0
     flag = False
-    df = tdx_client.transaction(symbol=code, start=0, offset=10)
+    df = tdx_client.transaction(symbol=code, start=0, offset=15)
     num_buy = df[df['buyorsell'] == 0]['vol'].sum()
     num_sell = df[df['buyorsell'] == 1]['vol'].sum()
     num_all = num_buy + num_sell
@@ -93,8 +93,8 @@ def core_job():
         price = row['price']
         flag = buy_strategy1(code)
         if flag:
-            enable_balance = 1000
-            buy_info(code, price, enable_balance)
+            # enable_balance = 80000
+            # buy_info(code, price, enable_balance)
             break
 
 

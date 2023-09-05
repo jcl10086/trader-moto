@@ -136,13 +136,13 @@ def sell_strategy2(code, cb_price, enable_amount):
         #     flag_one = True
         #     fz_price = cb_price * 1.003
         # 涨1%  阈值0.5%
-        if price > cb_price * 1.015 and flag_two == False:
+        if price > cb_price * 1.013 and flag_two == False:
             flag_two = True
             fz_price = cb_price * 1.01
         # 涨1% - 1.5% 阈值1%
         # if cb_price * 1.015 >= price > cb_price * 1.01:
         #     fz_price = cb_price * 1.01
-        if price > cb_price * 1.015:
+        if price > cb_price * 1.015 and high * 0.985 > fz_price:
             fz_price = high * 0.985
 
         fz_price = round(fz_price, 2)
@@ -160,22 +160,22 @@ def core_job():
     stock_list = get_codes()
     # 获取持仓
     positions = position_info()
-    if len(positions) == 0:
-        flag = False
-        while True:
-            my_df = get_speed(stock_list)
-            for index, row in my_df.iterrows():
-                code = row['code']
-                price = row['price']
-                flag = buy_strategy2(code)
-                if flag:
-                    enable_balance = get_balance()
-                    if enable_balance > 10000:
-                        buy_info(code, price, enable_balance)
-                        break
-            if flag:
-                break
-            time.sleep(3)
+    # if len(positions) == 0:
+    #     flag = False
+    #     while True:
+    #         my_df = get_speed(stock_list)
+    #         for index, row in my_df.iterrows():
+    #             code = row['code']
+    #             price = row['price']
+    #             flag = buy_strategy2(code)
+    #             if flag:
+    #                 enable_balance = get_balance()
+    #                 if enable_balance > 10000:
+    #                     buy_info(code, price, enable_balance)
+    #                     break
+    #         if flag:
+    #             break
+    #         time.sleep(3)
     # 重新获取仓位
     positions = position_info()
     if len(positions) == 0:

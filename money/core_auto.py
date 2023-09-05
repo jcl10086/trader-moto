@@ -131,10 +131,10 @@ def sell_strategy2(code, cb_price, enable_amount):
         if high < price:
             high = price
 
-        # 涨0.5%  阈值0.3%
-        # if price > cb_price * 1.005 and flag_one == False:
-        #     flag_one = True
-        #     fz_price = cb_price * 1.003
+        # 涨0.8%  阈值0.3%
+        if price > cb_price * 1.008 and flag_one == False:
+            flag_one = True
+            fz_price = cb_price * 1.003
         # 涨1%  阈值0.5%
         if price > cb_price * 1.013 and flag_two == False:
             flag_two = True

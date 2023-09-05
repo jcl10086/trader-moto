@@ -6,14 +6,14 @@ high = 0
 low = 10000
 # 计数
 num = 0
-dataframe = pd.read_excel('创业板.xlsx')
+dataframe = pd.read_excel('可转债.xlsx')
 
 
 def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230904')
+        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230905')
         # df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
@@ -175,12 +175,12 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    code = '300538'
-    core_job(code)
+    # code = '300538'
+    # core_job(code)
 
-    # codes = get_codes()
-    # for code in codes:
-    #     core_job(code)
-    #     print()
-    #     print()
-    #     print()
+    codes = get_codes()
+    for code in codes:
+        core_job(code)
+        print()
+        print()
+        print()

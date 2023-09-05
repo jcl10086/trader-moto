@@ -119,10 +119,12 @@ def buy_strategy2(code):
 def sell_strategy2(code, cb_price, enable_amount):
     flag_one = False
     flag_two = False
+    flag_three = False
+
     flag = False
     high = 0
     # 阈值价 止损2%
-    fz_price = cb_price * 0.98
+    fz_price = cb_price * 0.99
     # 挂单价
     gd_price = round(cb_price * 0.9, 2)
     while True:
@@ -139,15 +141,17 @@ def sell_strategy2(code, cb_price, enable_amount):
         if price > cb_price * 1.013 and flag_two == False:
             flag_two = True
             fz_price = cb_price * 1.01
-        # 涨1% - 1.5% 阈值1%
-        # if cb_price * 1.015 >= price > cb_price * 1.01:
-        #     fz_price = cb_price * 1.01
+        # 涨1%  阈值0.5%
+        if price > cb_price * 1.023 and flag_three == False:
+            flag_three = True
+            fz_price = cb_price * 1.02
         if price > cb_price * 1.015 and high * 0.985 > fz_price:
             fz_price = high * 0.985
 
         fz_price = round(fz_price, 2)
         yk = round((price - cb_price) / cb_price * 100, 2)
         if price < fz_price:
+            gd_price = fz_price * 0.995
             user.sell(code, price=gd_price, amount=enable_amount)
             flag = True
         print(f'{code} {price} {yk}%  阈值：{fz_price}  清仓：{flag}')

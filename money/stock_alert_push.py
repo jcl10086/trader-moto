@@ -53,7 +53,7 @@ def buy_strategy1(row):
     price_max = df['price'].max()
     price = df['price'].values[-1]
     diff = round((price_max - price) / price * 100, 2)
-    if diff > 2.5:
+    if diff > 2:
         alert_merge(row)
         # name = dataframe[dataframe['代码'] == int(code)].values[0][1]
         # content = f'{code} {name} {diff}'

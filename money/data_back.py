@@ -13,8 +13,10 @@ def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230906')
-        # df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
+        # df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230906')
+        df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
+        if len(df) == 0:
+            break
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
 
@@ -87,7 +89,12 @@ def buy_strategy3(code, df):
     if diff > 1.5 and num_avg > num_flag:
         flag = True
         print(f'{code} {df[-1:]["time"].values[0]} {flag}')
-    return flag
+
+
+def buy_strategy4(code, df):
+    diff = round((df['price'].values[1] - df['price'].values[0]) / df['price'].values[0] * 100, 2)
+    if diff > 1:
+        print(f'{code} {diff}')
 
 
 def sell_strategy1(code, df):
@@ -155,7 +162,7 @@ def sell_strategy4(code, df):
 
 def core_job(code):
     my_df = get_data_by_code(code)
-    buy_strategy3(code, my_df)
+    buy_strategy4(code, my_df)
     # for i in range(11, len(my_df) - 1):
     #     df = my_df[0:i]
     #     buy_strategy2(code, df)
@@ -175,12 +182,9 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    # code = '300538'
-    # core_job(code)
+    code = '603389'
+    core_job(code)
 
-    codes = get_codes()
-    for code in codes:
-        core_job(code)
-        print()
-        print()
-        print()
+    # codes = get_codes()
+    # for code in codes:
+    #     core_job(code)

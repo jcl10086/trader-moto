@@ -13,10 +13,8 @@ def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        # df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230906')
-        df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
-        if len(df) == 0:
-            break
+        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230907')
+        # df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
 
@@ -36,10 +34,12 @@ def buy_strategy1(code, df):
     return flag
 
 
-# 买入策略1
-def buy_strategy2(code, df):
-    df_before = df
-    df = df[-10:]
+# 买入策略2
+def buy_strategy2(code, df, my_df):
+    num_begin = my_df[1:20]['vol'].sum()
+    # df_before = df
+    df = df[-20:]
+    num_now = df['vol'].sum()
     flag = False
     # df = tdx_client.transaction(symbol=code, start=0, offset=12)
     num_buy = df[df['buyorsell'] == 0]['vol'].sum()
@@ -49,17 +49,21 @@ def buy_strategy2(code, df):
     diff = num_buy / num_all
 
     # 总流通
-    nums = 1.32
-    # nums = dataframe[dataframe['代码'] == int(code)]['流通股(亿)'].values[0]
-    if nums < 1.2:
+    # nums = 1.32
+    nums = dataframe[dataframe['代码'] == int(code)]['流通股(亿)'].values[0]
+    if nums < 0.5:
         num_flag = 120
-    elif 1.2 <= nums < 2.5:
-        num_flag = 400
+    elif 0.5 <= nums < 1:
+        num_flag = 200
+    elif 1 <= nums < 2:
+        num_flag = 350
+    elif 2 <= nums < 3:
+        num_flag = 800
     else:
         num_flag = 1000
-    if diff > 0.8 and num_avg > num_flag and df['price'].values[-1] > df_before['price'].values[0]:
+    if diff > 0.75 and num_avg > num_flag and num_now > 3 * num_begin:
         flag = True
-        print(f'{code} {df[-1:]["time"].values[0]} {flag}')
+        print(f'{code} {df[-1:]["time"].values[0]} {nums} {flag}')
     return flag
 
 
@@ -162,10 +166,14 @@ def sell_strategy4(code, df):
 
 def core_job(code):
     my_df = get_data_by_code(code)
-    buy_strategy4(code, my_df)
-    # for i in range(11, len(my_df) - 1):
-    #     df = my_df[0:i]
-    #     buy_strategy2(code, df)
+    # buy_strategy2(code, my_df)
+    for i in range(0, len(my_df) - 1):
+        if i <= 20:
+            continue
+        df = my_df[0:i]
+        flag = buy_strategy2(code, df, my_df)
+        if flag:
+            break
     #     sell_strategy2(code, df)
     # df = my_df[1:200]
     # df = my_df
@@ -182,9 +190,9 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    code = '603389'
-    core_job(code)
+    # code = '300041'
+    # core_job(code)
 
-    # codes = get_codes()
-    # for code in codes:
-    #     core_job(code)
+    codes = get_codes()
+    for code in codes:
+        core_job(code)

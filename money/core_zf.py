@@ -18,7 +18,8 @@ dataframe = pd.read_excel('创业板.xlsx')
 
 
 def get_codes():
-    codes = dataframe['代码']
+    df_new = dataframe[dataframe['涨幅%'].astype(float) < 3]
+    codes = df_new['代码']
     stock_list = []
     for code in codes.items():
         stock_list.append(str(code[1]).zfill(6))
@@ -110,7 +111,7 @@ def core_job():
 
 
 if __name__ == '__main__':
-    target_time = datetime.time(9, 30, 28)
+    target_time = datetime.time(7, 30, 28)
     while True:
         current_time = datetime.datetime.now().time()
         if current_time >= target_time:

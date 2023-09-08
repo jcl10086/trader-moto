@@ -13,7 +13,7 @@ def get_data_by_code(code):
     merged_df = None
     batch_sizes = [0, 2000, 4000]
     for batch_size in batch_sizes:
-        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230907')
+        df = tdx_client.transactions(symbol=code, start=batch_size, offset=2000, date='20230829')
         # df = tdx_client.transaction(symbol=code, start=batch_size, offset=2000)
         merged_df = pd.concat([df, merged_df], ignore_index=True)
     return merged_df
@@ -190,9 +190,9 @@ def get_codes():
 
 
 if __name__ == '__main__':
-    # code = '300041'
-    # core_job(code)
+    code = '300541'
+    core_job(code)
 
-    codes = get_codes()
-    for code in codes:
-        core_job(code)
+    # codes = get_codes()
+    # for code in codes:
+    #     core_job(code)

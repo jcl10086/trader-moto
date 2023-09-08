@@ -105,13 +105,13 @@ def core_job():
         price = row['price']
         flag = buy_strategy1(code)
         if flag:
-            enable_balance = 80000
+            enable_balance = 72000
             buy_info(code, price, enable_balance)
             break
 
 
 if __name__ == '__main__':
-    target_time = datetime.time(7, 30, 28)
+    target_time = datetime.time(9, 31, 30)
     while True:
         current_time = datetime.datetime.now().time()
         if current_time >= target_time:

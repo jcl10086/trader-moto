@@ -53,7 +53,7 @@ def buy_strategy1(row):
     price_max = df['price'].max()
     price = df['price'].values[-1]
     diff = round((price_max - price) / price * 100, 2)
-    if diff > 2:
+    if diff > 2.5:
         alert_merge(row, diff)
         # name = dataframe[dataframe['代码'] == int(code)].values[0][1]
         # content = f'{code} {name} {diff}'
@@ -70,7 +70,7 @@ def alert_merge(row, diff):
         for item in alert_data:
             if item['code'] == row['code']:
                 ts = item['ts']
-                if current_timestamp - ts > 5 * 60:
+                if current_timestamp - ts > 4 * 60:
                     name = dataframe[dataframe['代码'] == int(row.code)].values[0][1]
                     content = f'{row.code} {name} {diff}'
                     data_util.wx_push(content)
@@ -95,8 +95,8 @@ if __name__ == '__main__':
     while True:
         my_df = get_speed(stock_list)
         for index, row in my_df.iterrows():
-            diff = round((row.high - row.price) / row.price * 100, 2)
-            if diff > 6:
-                alert_merge(row, diff)
+            # diff = round((row.high - row.price) / row.price * 100, 2)
+            # if diff > 6:
+            #     alert_merge(row, diff)
             buy_strategy1(row)
         time.sleep(3)

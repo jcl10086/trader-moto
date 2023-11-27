@@ -8,7 +8,7 @@ from money import data_util
 
 pd.set_option('mode.chained_assignment', None)
 tdx_client = Quotes.factory(market='std')
-dataframe = pd.read_excel('可转债.xlsx')
+dataframe = pd.read_excel('创业板.xlsx')
 
 codes_before = []
 codes_after = []
@@ -35,7 +35,7 @@ def get_speed(stock_list):
     # 过滤未上市
     my_df = my_df[my_df['price'] > 0]
     # 过滤条件：reversed_bytes9
-    my_df = my_df[my_df['reversed_bytes9'] <= -0.5]
+    my_df = my_df[my_df['reversed_bytes9'] >= 0.5]
     # my_df = my_df[(my_df['reversed_bytes9'] >= 1) & (my_df['reversed_bytes9'] <= 5)]
     # 过滤涨幅
     # my_df = my_df[(my_df['price'] - my_df['last_close']) / my_df['last_close'] * 100 < 4]
@@ -58,6 +58,17 @@ def buy_strategy1(row):
         # name = dataframe[dataframe['代码'] == int(code)].values[0][1]
         # content = f'{code} {name} {diff}'
         # data_util.wx_push(content)
+    return flag
+
+
+# 买入策略2
+def buy_strategy2(row):
+    flag = False
+    df = tdx_client.transaction(symbol=row.code, start=0, offset=80)
+    vol1 = df['vol'][0:40].sum()
+    vol2 = df['vol'][40:80].sum()
+    if vol2/vol1 > 10:
+        alert_merge(row, 0)
     return flag
 
 
@@ -98,5 +109,5 @@ if __name__ == '__main__':
             # diff = round((row.high - row.price) / row.price * 100, 2)
             # if diff > 6:
             #     alert_merge(row, diff)
-            buy_strategy1(row)
+            buy_strategy2(row)
         time.sleep(3)

@@ -16,7 +16,7 @@ user.prepare('account.json')
 
 
 def get_codes():
-    dataframe = pd.read_excel('可转债.xlsx')
+    dataframe = pd.read_excel('创业板.xlsx')
     codes = dataframe['代码']
 
     stock_list = []

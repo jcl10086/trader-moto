@@ -111,9 +111,9 @@ def core_job():
 
 
 if __name__ == '__main__':
-    target_time = datetime.time(9, 31, 30)
+    target_time = datetime.time(8, 31, 30)
     while True:
         current_time = datetime.datetime.now().time()
         if current_time >= target_time:
             core_job()
-        time.sleep(3)
+        time.sleep(1)

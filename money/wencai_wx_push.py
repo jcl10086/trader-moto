@@ -9,7 +9,7 @@ from money import data_util
 
 def get_codes():
     stock_list = []
-    res = pywencai.get(query='沪深主板非st，最大涨幅>6，分时涨速>0.8，大单净量>8', sort_key='最新涨跌幅', sort_order='desc')
+    res = pywencai.get(query='沪深主板非st，最大涨幅>6，分时涨速>1，大单净比>10', sort_key='最新涨跌幅', sort_order='desc')
     if res is not None:
         stock_list = res['code'].values.tolist()
     return stock_list

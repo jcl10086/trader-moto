@@ -13,8 +13,8 @@ user.prepare('account.json')
 
 # ==================================================================
 code = "118019"
-cb_price = 168.548
-enable_amount = 1300
+cb_price = 166.261
+enable_amount = 1330
 min_price = 1000
 max_price = 0
 k = 0
@@ -53,7 +53,7 @@ def sell_strategy(code, cb_price, enable_amount):
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    if zf > 1:
+    if zf > 0.8:
         sell_flag = True
     if sell_flag and is_data(dq_price):
         gd_price = round(dq_price * 0.998, 2)

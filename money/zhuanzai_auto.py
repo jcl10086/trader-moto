@@ -13,10 +13,10 @@ user.prepare('account.json')
 
 # ==================================================================
 code = "123056"
-cb_price = 120
-enable_amount = 950
-min_price = cb_price
-max_price = cb_price
+cb_price = 115
+enable_amount = 1880
+min_price = 1000
+max_price = 0
 k = 0
 # 卖出标记
 sell_flag = False
@@ -40,7 +40,7 @@ def is_data(dq_price):
     if dq_price > max_price:
         max_price = dq_price
         k = 0
-    if k == 1:
+    if k == 5:
         return True
     return False
 
@@ -48,23 +48,22 @@ def is_data(dq_price):
 def sell_strategy(code, cb_price, enable_amount):
     global sell_flag
     dq_price = get_price(code)[0]
-    zf = (dq_price - cb_price) / cb_price * 100
+    zf = round((dq_price - cb_price) / cb_price * 100, 2)
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-
-    print(f'时间：{formatted_time}  代码：{code}  涨幅：{zf}')
     if zf > 1:
         sell_flag = True
     if sell_flag and is_data(dq_price):
-        gd_price = dq_price * 0.998
+        gd_price = round(dq_price * 0.998, 2)
         sell(code, gd_price, enable_amount)
         return True
     # 割肉
     if zf <= -3:
-        gd_price = dq_price * 0.998
+        gd_price = round(dq_price * 0.998, 2)
         sell(code, gd_price, enable_amount)
         return True
+    print(f'时间：{formatted_time}  代码：{code}  现价：{round(dq_price, 2)}  涨幅：{zf} 计数：{k} 最小值：{round(min_price, 2)} 最大值：{round(max_price, 2)}')
 
 
 if __name__ == '__main__':

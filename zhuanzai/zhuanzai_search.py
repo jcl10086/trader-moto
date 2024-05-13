@@ -23,8 +23,6 @@ def save_data(zz_array):
 
 def job(codes):
     zz_array = []
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     code_df = get_price(codes)
     for index, row in code_df.iterrows():
         code = row['code']
@@ -49,5 +47,10 @@ if __name__ == '__main__':
     for ca in code_array:
         codes.append(ca.split('.')[0])
     while True:
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        if current_time.hour > 15 or current_time.hour < 9:  # 15 表示下午3点
+            break
         job(codes)
+        print(f'{formatted_time}')
         time.sleep(3)

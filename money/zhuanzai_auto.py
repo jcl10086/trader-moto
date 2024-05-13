@@ -12,9 +12,9 @@ user = easytrader.use('eastmoney')
 user.prepare('account.json')
 
 # ==================================================================
-code = "123056"
-cb_price = 115
-enable_amount = 1880
+code = "118019"
+cb_price = 168.548
+enable_amount = 1300
 min_price = 1000
 max_price = 0
 k = 0
@@ -39,8 +39,9 @@ def is_data(dq_price):
         k = k + 1
     if dq_price > max_price:
         max_price = dq_price
+        min_price = dq_price
         k = 0
-    if k == 5:
+    if k == 4:
         return True
     return False
 

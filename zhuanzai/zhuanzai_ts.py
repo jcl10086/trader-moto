@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import pymysql
 
-conn = pymysql.connect(host='192.168.1.4', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor)
+conn = pymysql.connect(host='192.168.1.4', user='root', password='123456', cursorclass=pymysql.cursors.DictCursor, autocommit=1)
 
 
 def get_data():
@@ -16,6 +16,9 @@ def get_data():
     cursor.execute(sql2)
     results2 = cursor.fetchall()
     results = [{**d1, **d2} for d1 in results1 for d2 in results2 if d1['code'] == d2['code']]
+
+    sql3 = 'delete from data.online_data WHERE dt < NOW() - INTERVAL 70 MINUTE '
+    cursor.execute(sql3)
     return results
 
 
@@ -27,14 +30,12 @@ def resolve_data(results):
     df_new = df[df['zf'] <= -2]
     for index, row in df_new.iterrows():
         print(f'{row["code"]}===={row["latest_dt"]}===={row["zf"]}')
-        print("")
-        print("")
-        print("")
 
 
 if __name__ == '__main__':
-    cursor = conn.cursor()
     while True:
+        cursor = conn.cursor()
         results = get_data()
         resolve_data(results)
+        print("")
         time.sleep(10)

@@ -17,7 +17,7 @@ def get_data():
     results2 = cursor.fetchall()
     results = [{**d1, **d2} for d1 in results1 for d2 in results2 if d1['code'] == d2['code']]
 
-    sql3 = 'delete from data.online_data WHERE dt < NOW() - INTERVAL 70 MINUTE '
+    sql3 = 'delete from data.online_data WHERE dt < NOW() - INTERVAL 180 MINUTE '
     cursor.execute(sql3)
     return results
 

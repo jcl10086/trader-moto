@@ -56,7 +56,7 @@ if __name__ == '__main__':
         current_time = datetime.now()
         formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
         if current_time.hour >= 15 or current_time.hour <= 9:  # 15 表示下午3点
-            break
+            continue
         job(codes)
         print(f'{formatted_time}')
         time.sleep(3)

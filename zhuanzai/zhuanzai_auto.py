@@ -85,7 +85,7 @@ def sell_strategy(code, cb_price, enable_amount):
         gd_price = round(dq_price * 0.998, 2)
         sell(code, gd_price, enable_amount)
         return True
-    if sell_flag_two and is_data_two(dq_price):
+    if sell_flag_two and (is_data_two(dq_price) or zf < 1.1):
         gd_price = round(dq_price * 0.998, 2)
         sell(code, gd_price, enable_amount)
         return True

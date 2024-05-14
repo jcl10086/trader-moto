@@ -4,6 +4,9 @@ from mootdx.quotes import Quotes
 
 import easytrader
 from datetime import datetime
+from flask import Flask, request
+app = Flask(__name__)
+
 
 tdx_client = Quotes.factory(market='std')
 # 初始化账号
@@ -11,9 +14,10 @@ user = easytrader.use('eastmoney')
 user.prepare('account.json')
 
 # ==================================================================
-code = "123034"
-cb_price = 242.829
-enable_amount = 870
+# code = "123034"
+# cb_price = 242.829
+# enable_amount = 870
+go = True
 min_price = 1000
 max_price = 0
 k = 0
@@ -102,9 +106,26 @@ def sell_strategy(code, cb_price, enable_amount):
     print(f'时间：{formatted_time}  代码：{code}  现价：{round(dq_price, 2)}  涨幅：{zf} 计数：{k} 最小值：{round(min_price, 2)} 最大值：{round(max_price, 2)}')
 
 
-if __name__ == '__main__':
-    while True:
+# http://127.0.0.1:7000/job/123034/242.829/870
+@app.route('/job/<code>/<cb_price>/<enable_amount>')
+def job(code, cb_price, enable_amount):
+    global go
+    go = True
+    while go:
+        cb_price = float(cb_price)
+        enable_amount = int(enable_amount)
         flag = sell_strategy(code, cb_price, enable_amount)
         if flag:
             break
         time.sleep(2)
+
+
+@app.route('/stop')
+def stop():
+    global go
+    go = False
+    return 'stop'
+
+
+if __name__ == '__main__':
+    app.run(port=7000, debug=True)

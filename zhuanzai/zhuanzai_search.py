@@ -1,5 +1,7 @@
 import time
 from datetime import datetime
+
+import pandas as pd
 from mootdx.quotes import Quotes
 import pymysql
 import pywencai
@@ -10,7 +12,11 @@ tdx_client = Quotes.factory(market='std')
 
 
 def get_price(codes):
-    code_df = tdx_client.quotes(symbol=codes)
+    code_df = None
+    batch_size = 50
+    for i in range(0, len(codes), batch_size):
+        df = tdx_client.quotes(symbol=codes[i:i + batch_size])
+        code_df = pd.concat([code_df, df], ignore_index=True)
     return code_df
 
 

@@ -55,7 +55,7 @@ if __name__ == '__main__':
     while True:
         current_time = datetime.now()
         formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-        if current_time.hour > 15:  # 15 表示下午3点
+        if current_time.hour >= 15 or current_time.hour <= 9:  # 15 表示下午3点
             break
         job(codes)
         print(f'{formatted_time}')

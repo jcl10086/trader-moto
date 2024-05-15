@@ -28,6 +28,7 @@ def resolve_data(results):
     df['max_value'] = df['max_value'].astype(float)
     df['zf'] = round((df['latest_price'] - df['max_value']) / df['max_value'] * 100, 2)
     df_new = df[df['zf'] <= -2]
+    df_new = df_new.sort_values(by='zf')
     for index, row in df_new.iterrows():
         print(f'{row["code"]}===={row["latest_dt"]}===={row["zf"]}')
 

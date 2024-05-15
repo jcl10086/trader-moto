@@ -62,7 +62,7 @@ def is_data_two(dq_price):
         max_price = dq_price
         min_price = dq_price
         k = 0
-    if k == 7:
+    if k == 6:
         return True
     return False
 
@@ -77,7 +77,7 @@ def sell_strategy(code, cb_price, enable_amount):
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    if zf > 0.8:
+    if zf > 0.85:
         sell_flag_one = True
     if zf > 1.8:
         sell_flag_two = True
